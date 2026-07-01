@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { runMigrations } from "@workspace/db/migrate";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,9 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+// Run migrations on startup (CREATE TABLE IF NOT EXISTS — safe to re-run)
+runMigrations().catch((err) => logger.error({ err }, "Migration startup error"));
 
 app.listen(port, (err) => {
   if (err) {
