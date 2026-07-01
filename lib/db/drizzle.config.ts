@@ -1,14 +1,19 @@
 import { defineConfig } from "drizzle-kit";
 import path from "path";
 
-if (!process.env.DATABASE_URL) {
+const dbUrl = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
+
+if (!dbUrl) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
 }
+
+const isSupabase = dbUrl.includes("supabase.co");
 
 export default defineConfig({
   schema: path.join(__dirname, "./src/schema/index.ts"),
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: dbUrl,
+    ...(isSupabase ? { ssl: true } : {}),
   },
 });
