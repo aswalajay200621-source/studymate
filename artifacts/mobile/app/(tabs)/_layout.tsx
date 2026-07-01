@@ -17,6 +17,17 @@ import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 
+// ─── design tokens ────────────────────────────────────────────────────────────
+const BG        = "#09090B";
+const BORDER    = "rgba(255,255,255,0.08)";
+const PURPLE    = "#8B5CF6";
+const PURPLE_TXT= "#A78BFA";
+const PURPLE_LIT= "#C4B5FD";
+const MUTED     = "#6B7280";
+const FG        = "#E2E8F0";
+const isWeb     = Platform.OS === "web";
+// ──────────────────────────────────────────────────────────────────────────────
+
 function NativeTabLayout() {
   return (
     <NativeTabs>
@@ -37,53 +48,48 @@ function NativeTabLayout() {
 }
 
 const NAV_ITEMS = [
-  { name: "index", route: "/(tabs)", label: "Home", icon: "home" as const },
-  { name: "library", route: "/(tabs)/library", label: "Library", icon: "book-open" as const },
-  { name: "profile", route: "/(tabs)/profile", label: "Profile", icon: "user" as const },
+  { name: "index",   route: "/(tabs)",         label: "Home",    icon: "home"      as const },
+  { name: "library", route: "/(tabs)/library",  label: "Library", icon: "book-open" as const },
+  { name: "profile", route: "/(tabs)/profile",  label: "Profile", icon: "user"      as const },
 ];
 
 function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean }) {
-  const [hovered, setHovered] = useState(false);
-
-  const isHighlit = active || hovered;
+  const [hov, setHov] = useState(false);
+  const lit = active || hov;
 
   return (
     <TouchableOpacity
-      key={item.name}
       onPress={() => router.replace(item.route as any)}
       activeOpacity={0.85}
-      {...(Platform.OS === "web" ? {
-        onMouseEnter: () => setHovered(true),
-        onMouseLeave: () => setHovered(false),
+      {...(isWeb ? {
+        onMouseEnter: () => setHov(true),
+        onMouseLeave: () => setHov(false),
       } : {})}
       style={[
         dh.navItem,
-        isHighlit && {
-          backgroundColor: "rgba(124, 92, 252, 0.12)",
-          ...(Platform.OS === "web" ? {
-            boxShadow: "0 0 12px rgba(124, 92, 252, 0.15)",
-          } : {}),
+        lit && {
+          backgroundColor: active
+            ? "rgba(139,92,246,0.18)"
+            : "rgba(139,92,246,0.10)",
+          borderColor: active
+            ? "rgba(139,92,246,0.28)"
+            : "rgba(139,92,246,0.14)",
+          ...(isWeb ? { boxShadow: "0 0 12px rgba(139,92,246,0.14)" } : {}),
         },
-        active && {
-          backgroundColor: "rgba(124, 92, 252, 0.18)",
-          borderWidth: 1,
-          borderColor: "rgba(124, 92, 252, 0.25)",
-        },
+        isWeb ? { transition: "all 0.25s ease" } as any : {},
       ] as any}
     >
       <Feather
         name={item.icon}
         size={15}
-        color={active ? "#C4B5FD" : hovered ? "#A78BFA" : "#6B7280"}
+        color={active ? PURPLE_LIT : hov ? PURPLE_TXT : MUTED}
         style={{ marginRight: 6 }}
       />
-      <Text
-        style={[
-          dh.navLabel,
-          { color: active ? "#C4B5FD" : hovered ? "#A78BFA" : "#6B7280" },
-          (active || hovered) && { fontFamily: "Inter_600SemiBold" },
-        ]}
-      >
+      <Text style={[
+        dh.navLabel,
+        { color: active ? PURPLE_LIT : hov ? PURPLE_TXT : MUTED },
+        lit && { fontFamily: "Inter_600SemiBold" },
+      ]}>
         {item.label}
       </Text>
     </TouchableOpacity>
@@ -92,7 +98,7 @@ function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean 
 
 function DesktopHeader() {
   const pathname = usePathname();
-  const [logoHovered, setLogoHovered] = useState(false);
+  const [logoHov, setLogoHov] = useState(false);
 
   function isActive(name: string) {
     if (name === "index") return pathname === "/" || pathname === "/index";
@@ -100,51 +106,39 @@ function DesktopHeader() {
   }
 
   return (
-    <View
-      style={[
-        dh.header,
-        Platform.OS === "web" ? {
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          backgroundColor: "rgba(8, 11, 26, 0.65)",
-          borderBottomColor: "rgba(124, 92, 252, 0.15)",
-          boxShadow: "0 1px 0 rgba(124,92,252,0.08), 0 4px 24px rgba(0,0,0,0.35)",
-        } as any : {
-          backgroundColor: "#080B1A",
-          borderBottomColor: "#1E2240",
-        },
-      ]}
-    >
+    <View style={[
+      dh.header,
+      isWeb ? {
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        backgroundColor: "rgba(9,9,11,0.80)",
+        borderBottomColor: "rgba(139,92,246,0.12)",
+        boxShadow: "0 1px 0 rgba(139,92,246,0.07), 0 4px 24px rgba(0,0,0,0.45)",
+      } as any : {
+        backgroundColor: BG,
+        borderBottomColor: BORDER,
+      },
+    ]}>
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => router.replace("/(tabs)")}
-        {...(Platform.OS === "web" ? {
-          onMouseEnter: () => setLogoHovered(true),
-          onMouseLeave: () => setLogoHovered(false),
+        {...(isWeb ? {
+          onMouseEnter: () => setLogoHov(true),
+          onMouseLeave: () => setLogoHov(false),
         } : {})}
         style={dh.left}
       >
-        <View
-          style={[
-            dh.logoBox,
-            logoHovered && Platform.OS === "web" ? {
-              backgroundColor: "rgba(124,92,252,0.25)",
-              ...(Platform.OS === "web" ? {
-                boxShadow: "0 0 16px rgba(124,92,252,0.4)",
-              } : {}),
-            } as any : {},
-          ]}
-        >
-          <Feather name="book-open" size={18} color={logoHovered ? "#C4B5FD" : "#A78BFA"} />
+        <View style={[
+          dh.logoBox,
+          logoHov && isWeb && {
+            backgroundColor: "rgba(139,92,246,0.22)",
+            boxShadow: "0 0 16px rgba(139,92,246,0.38)",
+          } as any,
+          isWeb ? { transition: "all 0.25s ease" } as any : {},
+        ]}>
+          <Feather name="book-open" size={18} color={logoHov ? PURPLE_LIT : PURPLE_TXT} />
         </View>
-        <Text
-          style={[
-            dh.brandText,
-            logoHovered && { color: "#C4B5FD" },
-          ]}
-        >
-          StudyMate
-        </Text>
+        <Text style={[dh.brandText, logoHov && { color: PURPLE_LIT }]}>StudyMate</Text>
       </TouchableOpacity>
 
       <View style={dh.navItems}>
@@ -157,49 +151,41 @@ function DesktopHeader() {
 }
 
 function ClassicTabLayout() {
-  const colors = useColors();
+  const colors    = useColors();
   const { isDark } = useApp();
-  const isIOS = Platform.OS === "ios";
-  const isWeb = Platform.OS === "web";
+  const isIOS     = Platform.OS === "ios";
   const isDesktop = useIsDesktop();
 
   return (
-    <View style={{ flex: 1, flexDirection: "column" }}>
+    <View style={{ flex: 1, flexDirection: "column", backgroundColor: BG }}>
       {isDesktop && <DesktopHeader />}
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: colors.primary,
-            tabBarInactiveTintColor: colors.mutedForeground,
+            tabBarActiveTintColor:   PURPLE_TXT,
+            tabBarInactiveTintColor: MUTED,
             headerShown: false,
             tabBarStyle: isDesktop
               ? { display: "none" }
               : {
                   position: "absolute",
-                  backgroundColor: isIOS ? "transparent" : colors.background,
+                  backgroundColor: isIOS ? "transparent" : BG,
                   borderTopWidth: isWeb ? 1 : 0,
-                  borderTopColor: colors.border,
+                  borderTopColor: BORDER,
                   elevation: 0,
                   ...(isWeb ? { height: 84 } : {}),
                 },
             tabBarBackground: () =>
-              isDesktop
-                ? null
-                : isIOS
-                ? (
-                  <BlurView
-                    intensity={100}
-                    tint={isDark ? "dark" : "light"}
-                    style={StyleSheet.absoluteFill}
-                  />
-                ) : isWeb ? (
-                  <View
-                    style={[
-                      StyleSheet.absoluteFill,
-                      { backgroundColor: colors.background },
-                    ]}
-                  />
-                ) : null,
+              isDesktop ? null
+              : isIOS ? (
+                <BlurView
+                  intensity={100}
+                  tint={isDark ? "dark" : "systemChromeMaterialDark"}
+                  style={StyleSheet.absoluteFill}
+                />
+              ) : isWeb ? (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: BG }]} />
+              ) : null,
           }}
         >
           <Tabs.Screen
@@ -207,11 +193,9 @@ function ClassicTabLayout() {
             options={{
               title: "Home",
               tabBarIcon: ({ color }) =>
-                isIOS ? (
-                  <SymbolView name="house" tintColor={color} size={24} />
-                ) : (
-                  <Feather name="home" size={22} color={color} />
-                ),
+                isIOS
+                  ? <SymbolView name="house" tintColor={color} size={24} />
+                  : <Feather name="home" size={22} color={color} />,
             }}
           />
           <Tabs.Screen
@@ -219,11 +203,9 @@ function ClassicTabLayout() {
             options={{
               title: "Library",
               tabBarIcon: ({ color }) =>
-                isIOS ? (
-                  <SymbolView name="books.vertical" tintColor={color} size={24} />
-                ) : (
-                  <Feather name="book-open" size={22} color={color} />
-                ),
+                isIOS
+                  ? <SymbolView name="books.vertical" tintColor={color} size={24} />
+                  : <Feather name="book-open" size={22} color={color} />,
             }}
           />
           <Tabs.Screen
@@ -231,11 +213,9 @@ function ClassicTabLayout() {
             options={{
               title: "Profile",
               tabBarIcon: ({ color }) =>
-                isIOS ? (
-                  <SymbolView name="person.circle" tintColor={color} size={24} />
-                ) : (
-                  <Feather name="user" size={22} color={color} />
-                ),
+                isIOS
+                  ? <SymbolView name="person.circle" tintColor={color} size={24} />
+                  : <Feather name="user" size={22} color={color} />,
             }}
           />
         </Tabs>
@@ -245,57 +225,27 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
+  if (isLiquidGlassAvailable()) return <NativeTabLayout />;
   return <ClassicTabLayout />;
 }
 
 const dh = StyleSheet.create({
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 40,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 40, paddingVertical: 16, borderBottomWidth: 1,
   },
-  left: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
+  left:  { flexDirection: "row", alignItems: "center", gap: 10 },
   logoBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "#1E1040",
-    alignItems: "center",
-    justifyContent: "center",
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: "rgba(139,92,246,0.12)",
+    alignItems: "center", justifyContent: "center",
   },
-  brandText: {
-    color: "#E2E8F0",
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 0.3,
-  },
-  navItems: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
+  brandText: { color: FG, fontSize: 16, fontFamily: "Inter_700Bold", letterSpacing: 0.3 },
+  navItems:  { flexDirection: "row", alignItems: "center", gap: 4 },
   navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "transparent",
+    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 10, borderWidth: 1, borderColor: "transparent",
   },
-  navLabel: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    letterSpacing: 0.2,
-  },
+  navLabel: { fontSize: 14, fontFamily: "Inter_400Regular", letterSpacing: 0.2 },
 });
