@@ -4,7 +4,7 @@ import { Tabs, usePathname, router } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
@@ -43,8 +42,57 @@ const NAV_ITEMS = [
   { name: "profile", route: "/(tabs)/profile", label: "Profile", icon: "user" as const },
 ];
 
+function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
+  const isHighlit = active || hovered;
+
+  return (
+    <TouchableOpacity
+      key={item.name}
+      onPress={() => router.replace(item.route as any)}
+      activeOpacity={0.85}
+      {...(Platform.OS === "web" ? {
+        onMouseEnter: () => setHovered(true),
+        onMouseLeave: () => setHovered(false),
+      } : {})}
+      style={[
+        dh.navItem,
+        isHighlit && {
+          backgroundColor: "rgba(124, 92, 252, 0.12)",
+          ...(Platform.OS === "web" ? {
+            boxShadow: "0 0 12px rgba(124, 92, 252, 0.15)",
+          } : {}),
+        },
+        active && {
+          backgroundColor: "rgba(124, 92, 252, 0.18)",
+          borderWidth: 1,
+          borderColor: "rgba(124, 92, 252, 0.25)",
+        },
+      ] as any}
+    >
+      <Feather
+        name={item.icon}
+        size={15}
+        color={active ? "#C4B5FD" : hovered ? "#A78BFA" : "#6B7280"}
+        style={{ marginRight: 6 }}
+      />
+      <Text
+        style={[
+          dh.navLabel,
+          { color: active ? "#C4B5FD" : hovered ? "#A78BFA" : "#6B7280" },
+          (active || hovered) && { fontFamily: "Inter_600SemiBold" },
+        ]}
+      >
+        {item.label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 function DesktopHeader() {
   const pathname = usePathname();
+  const [logoHovered, setLogoHovered] = useState(false);
 
   function isActive(name: string) {
     if (name === "index") return pathname === "/" || pathname === "/index";
@@ -52,42 +100,57 @@ function DesktopHeader() {
   }
 
   return (
-    <View style={[dh.header, { backgroundColor: "#080B1A", borderBottomColor: "#1E2240" }]}>
-      <View style={dh.left}>
-        <View style={dh.logoBox}>
-          <Feather name="book-open" size={18} color="#A78BFA" />
+    <View
+      style={[
+        dh.header,
+        Platform.OS === "web" ? {
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          backgroundColor: "rgba(8, 11, 26, 0.65)",
+          borderBottomColor: "rgba(124, 92, 252, 0.15)",
+          boxShadow: "0 1px 0 rgba(124,92,252,0.08), 0 4px 24px rgba(0,0,0,0.35)",
+        } as any : {
+          backgroundColor: "#080B1A",
+          borderBottomColor: "#1E2240",
+        },
+      ]}
+    >
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => router.replace("/(tabs)")}
+        {...(Platform.OS === "web" ? {
+          onMouseEnter: () => setLogoHovered(true),
+          onMouseLeave: () => setLogoHovered(false),
+        } : {})}
+        style={dh.left}
+      >
+        <View
+          style={[
+            dh.logoBox,
+            logoHovered && Platform.OS === "web" ? {
+              backgroundColor: "rgba(124,92,252,0.25)",
+              ...(Platform.OS === "web" ? {
+                boxShadow: "0 0 16px rgba(124,92,252,0.4)",
+              } : {}),
+            } as any : {},
+          ]}
+        >
+          <Feather name="book-open" size={18} color={logoHovered ? "#C4B5FD" : "#A78BFA"} />
         </View>
-        <Text style={dh.brandText}>StudyMate</Text>
-      </View>
+        <Text
+          style={[
+            dh.brandText,
+            logoHovered && { color: "#C4B5FD" },
+          ]}
+        >
+          StudyMate
+        </Text>
+      </TouchableOpacity>
 
       <View style={dh.navItems}>
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.name);
-          return (
-            <TouchableOpacity
-              key={item.name}
-              onPress={() => router.replace(item.route as any)}
-              activeOpacity={0.75}
-              style={dh.navItem}
-            >
-              <Feather
-                name={item.icon}
-                size={15}
-                color={active ? "#A78BFA" : "#6B7280"}
-                style={{ marginRight: 6 }}
-              />
-              <Text
-                style={[
-                  dh.navLabel,
-                  { color: active ? "#A78BFA" : "#6B7280" },
-                  active && { fontFamily: "Inter_600SemiBold" },
-                ]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {NAV_ITEMS.map((item) => (
+          <NavItem key={item.name} item={item} active={isActive(item.name)} />
+        ))}
       </View>
     </View>
   );
@@ -227,6 +290,8 @@ const dh = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   navLabel: {
     fontSize: 14,

@@ -18,6 +18,13 @@ import { useAuth } from "@/context/AuthContext";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { Feather } from "@expo/vector-icons";
 
+const isWeb = Platform.OS === "web";
+
+function webHover(setFn: (v: boolean) => void) {
+  if (!isWeb) return {};
+  return { onMouseEnter: () => setFn(true), onMouseLeave: () => setFn(false) };
+}
+
 export default function LoginScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -46,7 +53,6 @@ export default function LoginScreen() {
 
   if (isDesktop) {
     return <DesktopLogin
-      colors={colors}
       email={email} setEmail={setEmail}
       password={password} setPassword={setPassword}
       showPassword={showPassword} setShowPassword={setShowPassword}
@@ -78,42 +84,191 @@ export default function LoginScreen() {
         </LinearGradient>
 
         <View style={[s.body, { backgroundColor: colors.background }]}>
-          <LoginCard
-            colors={colors}
-            email={email} setEmail={setEmail}
-            password={password} setPassword={setPassword}
-            showPassword={showPassword} setShowPassword={setShowPassword}
-            loading={loading} error={error}
-            handleLogin={handleLogin}
-            isDesktop={false}
-          />
+          <View style={[s.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[s.welcomeTitle, { color: colors.foreground }]}>Welcome back!</Text>
+            <Text style={[s.welcomeDesc, { color: colors.mutedForeground }]}>
+              Sign in with your email and password
+            </Text>
+            <Text style={[s.label, { color: colors.mutedForeground }]}>Email Address</Text>
+            <TextInput
+              style={[s.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+              placeholder="you@example.com"
+              placeholderTextColor={colors.mutedForeground}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <Text style={[s.label, { color: colors.mutedForeground }]}>Password</Text>
+            <View style={[s.pwRow, { borderColor: colors.border, backgroundColor: colors.background }]}>
+              <TextInput
+                style={[s.pwInput, { color: colors.foreground }]}
+                placeholder="Your password"
+                placeholderTextColor={colors.mutedForeground}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                onSubmitEditing={handleLogin}
+                returnKeyType="go"
+              />
+              <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ padding: 4 }}>
+                <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </View>
+            {!!error && (
+              <View style={[s.errorBox, { backgroundColor: "#FEE2E2" }]}>
+                <Feather name="alert-circle" size={14} color="#DC2626" />
+                <Text style={s.errorText}>{error}</Text>
+              </View>
+            )}
+            <TouchableOpacity onPress={handleLogin} activeOpacity={0.85} disabled={loading} style={[s.loginBtn, { marginTop: 8 }]}>
+              <LinearGradient colors={["#4361EE", "#7C3AED"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.loginGradient}>
+                {loading ? <ActivityIndicator color="#fff" /> : (
+                  <View style={s.loginBtnInner}>
+                    <Feather name="log-in" size={18} color="#fff" style={{ marginRight: 10 }} />
+                    <Text style={s.loginText}>Sign In</Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/signup")} style={s.switchLink}>
+              <Text style={[s.switchText, { color: colors.mutedForeground }]}>
+                Don't have an account?{" "}
+                <Text style={{ color: "#4361EE", fontFamily: "Inter_600SemiBold" }}>Create one</Text>
+              </Text>
+            </TouchableOpacity>
+            <View style={[s.divider, { borderColor: colors.border }]} />
+            <View style={s.features}>
+              {[
+                { icon: "book-open", text: "Study notes for CSE & EEE" },
+                { icon: "zap", text: "Flashcards for quick revision" },
+                { icon: "check-circle", text: "Quizzes to test your knowledge" },
+              ].map((f) => (
+                <View key={f.text} style={s.feature}>
+                  <Feather name={f.icon as any} size={16} color="#4361EE" style={{ marginRight: 10 }} />
+                  <Text style={[s.featureText, { color: colors.mutedForeground }]}>{f.text}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
+function GlassNavLink({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      {...(webHover(setHovered) as any)}
+      style={[
+        ds.navLink,
+        (hovered || active) && {
+          backgroundColor: "rgba(124,92,252,0.14)",
+          borderRadius: 8,
+          ...(isWeb ? { boxShadow: "0 0 10px rgba(124,92,252,0.18)" } : {}),
+        },
+      ] as any}
+    >
+      <Text
+        style={[
+          active ? ds.navLinkActiveText : ds.navLinkText,
+          hovered && !active && { color: "#A78BFA" },
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+function GlassInput({ value, onChangeText, placeholder, secureTextEntry, keyboardType, autoCapitalize, onSubmitEditing, returnKeyType, rightEl }: any) {
+  const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const isLit = focused || hovered;
+
+  return (
+    <View
+      {...(webHover(setHovered) as any)}
+      style={[
+        ds.inputRow,
+        {
+          backgroundColor: isLit ? "rgba(30,18,70,0.9)" : "#141830",
+          borderColor: focused
+            ? "rgba(124,92,252,0.7)"
+            : hovered
+            ? "rgba(124,92,252,0.35)"
+            : "#1E2240",
+          ...(isWeb && isLit
+            ? { boxShadow: focused ? "0 0 0 3px rgba(124,92,252,0.15), 0 0 16px rgba(124,92,252,0.12)" : "0 0 8px rgba(124,92,252,0.08)" }
+            : {}),
+        },
+      ] as any}
+    >
+      <TextInput
+        style={ds.input}
+        placeholder={placeholder}
+        placeholderTextColor="#4B5563"
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        onSubmitEditing={onSubmitEditing}
+        returnKeyType={returnKeyType}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+      {rightEl}
+    </View>
+  );
+}
+
 function DesktopLogin(props: any) {
-  const { colors } = props;
+  const [btnHovered, setBtnHovered] = useState(false);
+  const [cardHovered, setCardHovered] = useState(false);
+  const [logoHovered, setLogoHovered] = useState(false);
+
   return (
     <View style={[ds.root, { backgroundColor: "#080B1A" }]}>
-      <View style={[ds.topNav, { borderBottomColor: "#1E2240" }]}>
-        <View style={ds.navLeft}>
-          <View style={ds.navLogoBox}>
-            <Feather name="book-open" size={18} color="#A78BFA" />
+      <View
+        style={[
+          ds.topNav,
+          isWeb ? {
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            backgroundColor: "rgba(8, 11, 26, 0.65)",
+            borderBottomColor: "rgba(124, 92, 252, 0.15)",
+            boxShadow: "0 1px 0 rgba(124,92,252,0.08), 0 4px 24px rgba(0,0,0,0.35)",
+          } as any : { borderBottomColor: "#1E2240" },
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.8}
+          {...(webHover(setLogoHovered) as any)}
+          style={ds.navLeft}
+        >
+          <View
+            style={[
+              ds.navLogoBox,
+              logoHovered && isWeb ? {
+                backgroundColor: "rgba(124,92,252,0.25)",
+                ...(isWeb ? { boxShadow: "0 0 14px rgba(124,92,252,0.35)" } : {}),
+              } as any : {},
+            ]}
+          >
+            <Feather name="book-open" size={18} color={logoHovered ? "#C4B5FD" : "#A78BFA"} />
           </View>
-          <Text style={ds.navBrand}>StudyMate</Text>
-        </View>
+          <Text style={[ds.navBrand, logoHovered && { color: "#C4B5FD" }]}>StudyMate</Text>
+        </TouchableOpacity>
+
         <View style={ds.navRight}>
-          <TouchableOpacity style={ds.navLink}>
-            <Text style={ds.navLinkActiveText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/library")} style={ds.navLink}>
-            <Text style={ds.navLinkText}>Notes</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={ds.navLink}>
-            <Text style={ds.navLinkText}>Flashcards</Text>
-          </TouchableOpacity>
+          <GlassNavLink label="Login" active />
+          <GlassNavLink label="Notes" onPress={() => router.push("/(tabs)/library")} />
+          <GlassNavLink label="Flashcards" />
         </View>
       </View>
 
@@ -122,8 +277,37 @@ function DesktopLogin(props: any) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[ds.card, { backgroundColor: "#0F1228", borderColor: "#1E2240" }]}>
-          <View style={ds.cardIconBox}>
+        <View
+          {...(webHover(setCardHovered) as any)}
+          style={[
+            ds.card,
+            isWeb ? {
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              backgroundColor: cardHovered
+                ? "rgba(18, 22, 52, 0.92)"
+                : "rgba(15, 18, 40, 0.85)",
+              borderColor: cardHovered
+                ? "rgba(124, 92, 252, 0.28)"
+                : "rgba(30, 34, 64, 0.8)",
+              boxShadow: cardHovered
+                ? "0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,92,252,0.15), inset 0 1px 0 rgba(255,255,255,0.04)"
+                : "0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
+            } as any : {
+              backgroundColor: "#0F1228",
+              borderColor: "#1E2240",
+            },
+          ]}
+        >
+          <View
+            style={[
+              ds.cardIconBox,
+              isWeb ? {
+                background: "linear-gradient(135deg, rgba(109,40,217,0.3), rgba(124,92,252,0.15))",
+                boxShadow: "0 0 20px rgba(124,92,252,0.2), inset 0 1px 0 rgba(255,255,255,0.06)",
+              } as any : {},
+            ]}
+          >
             <Feather name="users" size={22} color="#A78BFA" />
           </View>
 
@@ -131,35 +315,29 @@ function DesktopLogin(props: any) {
           <Text style={ds.welcomeDesc}>Sign in with your email and password</Text>
 
           <Text style={ds.label}>EMAIL ADDRESS</Text>
-          <View style={[ds.inputRow, { backgroundColor: "#141830", borderColor: "#1E2240" }]}>
-            <TextInput
-              style={ds.input}
-              placeholder="you@example.com"
-              placeholderTextColor="#4B5563"
-              value={props.email}
-              onChangeText={props.setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <Feather name="mail" size={16} color="#4B5563" />
-          </View>
+          <GlassInput
+            value={props.email}
+            onChangeText={props.setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            rightEl={<Feather name="mail" size={16} color="#4B5563" />}
+          />
 
           <Text style={[ds.label, { marginTop: 16 }]}>PASSWORD</Text>
-          <View style={[ds.inputRow, { backgroundColor: "#141830", borderColor: "#1E2240" }]}>
-            <TextInput
-              style={ds.input}
-              placeholder="Your password"
-              placeholderTextColor="#4B5563"
-              value={props.password}
-              onChangeText={props.setPassword}
-              secureTextEntry={!props.showPassword}
-              onSubmitEditing={props.handleLogin}
-              returnKeyType="go"
-            />
-            <TouchableOpacity onPress={() => props.setShowPassword((v: boolean) => !v)}>
-              <Feather name={props.showPassword ? "eye-off" : "eye"} size={16} color="#4B5563" />
-            </TouchableOpacity>
-          </View>
+          <GlassInput
+            value={props.password}
+            onChangeText={props.setPassword}
+            placeholder="Your password"
+            secureTextEntry={!props.showPassword}
+            onSubmitEditing={props.handleLogin}
+            returnKeyType="go"
+            rightEl={
+              <TouchableOpacity onPress={() => props.setShowPassword((v: boolean) => !v)}>
+                <Feather name={props.showPassword ? "eye-off" : "eye"} size={16} color="#6B7280" />
+              </TouchableOpacity>
+            }
+          />
 
           <TouchableOpacity style={ds.forgotRow}>
             <Text style={ds.forgotText}>Forgot password?</Text>
@@ -174,12 +352,21 @@ function DesktopLogin(props: any) {
 
           <TouchableOpacity
             onPress={props.handleLogin}
-            activeOpacity={0.85}
+            activeOpacity={0.9}
             disabled={props.loading}
-            style={ds.loginBtn}
+            {...(webHover(setBtnHovered) as any)}
+            style={[
+              ds.loginBtn,
+              isWeb ? {
+                transform: btnHovered ? [{ scale: 1.015 }] : [{ scale: 1 }],
+                boxShadow: btnHovered
+                  ? "0 0 28px rgba(124,92,252,0.55), 0 4px 16px rgba(0,0,0,0.4)"
+                  : "0 0 14px rgba(124,92,252,0.25), 0 2px 8px rgba(0,0,0,0.3)",
+              } as any : {},
+            ]}
           >
             <LinearGradient
-              colors={["#6D28D9", "#7C5CFC"]}
+              colors={btnHovered ? ["#7C3AED", "#8B5CF6"] : ["#6D28D9", "#7C5CFC"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={ds.loginGradient}
@@ -202,7 +389,7 @@ function DesktopLogin(props: any) {
             </Text>
           </TouchableOpacity>
 
-          <View style={[ds.divider, { borderColor: "#1E2240" }]} />
+          <View style={[ds.divider, { borderColor: "rgba(30,34,64,0.8)" }]} />
 
           <View style={ds.features}>
             {[
@@ -210,107 +397,70 @@ function DesktopLogin(props: any) {
               { icon: "zap", text: "Flashcards for quick revision" },
               { icon: "check-circle", text: "Quizzes to test your knowledge" },
             ].map((f) => (
-              <View key={f.text} style={ds.featureRow}>
-                <Feather name={f.icon as any} size={15} color="#7C5CFC" style={{ marginRight: 10 }} />
-                <Text style={ds.featureText}>{f.text}</Text>
-              </View>
+              <FeatureRow key={f.text} icon={f.icon as any} text={f.text} />
             ))}
           </View>
         </View>
       </ScrollView>
 
-      <View style={[ds.footer, { borderTopColor: "#1E2240" }]}>
+      <View
+        style={[
+          ds.footer,
+          isWeb ? {
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            backgroundColor: "rgba(8,11,26,0.7)",
+            borderTopColor: "rgba(124,92,252,0.1)",
+          } as any : { borderTopColor: "#1E2240" },
+        ]}
+      >
         <Text style={ds.footerLeft}>StudyMate  © 2024 StudyMate</Text>
         <View style={ds.footerLinks}>
-          <Text style={ds.footerLink}>Login</Text>
-          <Text style={ds.footerLink}>Notes</Text>
-          <Text style={ds.footerLink}>Flashcards</Text>
-          <Text style={ds.footerLink}>Quizzes</Text>
+          {["Login", "Notes", "Flashcards", "Quizzes"].map((l) => (
+            <FooterLink key={l} label={l} />
+          ))}
         </View>
       </View>
     </View>
   );
 }
 
-function LoginCard(props: any) {
-  const { colors } = props;
+function FeatureRow({ icon, text }: { icon: any; text: string }) {
+  const [hovered, setHovered] = useState(false);
   return (
-    <View style={[s.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[s.welcomeTitle, { color: colors.foreground }]}>Welcome back!</Text>
-      <Text style={[s.welcomeDesc, { color: colors.mutedForeground }]}>
-        Sign in with your email and password
-      </Text>
-
-      <Text style={[s.label, { color: colors.mutedForeground }]}>Email Address</Text>
-      <TextInput
-        style={[s.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-        placeholder="you@example.com"
-        placeholderTextColor={colors.mutedForeground}
-        value={props.email}
-        onChangeText={props.setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
+    <TouchableOpacity
+      activeOpacity={0.8}
+      {...(webHover(setHovered) as any)}
+      style={[
+        ds.featureRow,
+        hovered && isWeb ? {
+          backgroundColor: "rgba(124,92,252,0.07)",
+          borderRadius: 8,
+          paddingHorizontal: 8,
+          marginHorizontal: -8,
+        } as any : {},
+      ]}
+    >
+      <Feather
+        name={icon}
+        size={15}
+        color={hovered ? "#A78BFA" : "#7C5CFC"}
+        style={{ marginRight: 10 }}
       />
+      <Text style={[ds.featureText, hovered && { color: "#A78BFA" }]}>{text}</Text>
+    </TouchableOpacity>
+  );
+}
 
-      <Text style={[s.label, { color: colors.mutedForeground }]}>Password</Text>
-      <View style={[s.pwRow, { borderColor: colors.border, backgroundColor: colors.background }]}>
-        <TextInput
-          style={[s.pwInput, { color: colors.foreground }]}
-          placeholder="Your password"
-          placeholderTextColor={colors.mutedForeground}
-          value={props.password}
-          onChangeText={props.setPassword}
-          secureTextEntry={!props.showPassword}
-          onSubmitEditing={props.handleLogin}
-          returnKeyType="go"
-        />
-        <TouchableOpacity onPress={() => props.setShowPassword((v: boolean) => !v)} style={{ padding: 4 }}>
-          <Feather name={props.showPassword ? "eye-off" : "eye"} size={18} color={colors.mutedForeground} />
-        </TouchableOpacity>
-      </View>
-
-      {!!props.error && (
-        <View style={[s.errorBox, { backgroundColor: "#FEE2E2" }]}>
-          <Feather name="alert-circle" size={14} color="#DC2626" />
-          <Text style={s.errorText}>{props.error}</Text>
-        </View>
-      )}
-
-      <TouchableOpacity onPress={props.handleLogin} activeOpacity={0.85} disabled={props.loading} style={[s.loginBtn, { marginTop: 8 }]}>
-        <LinearGradient colors={["#4361EE", "#7C3AED"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.loginGradient}>
-          {props.loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <View style={s.loginBtnInner}>
-              <Feather name="log-in" size={18} color="#fff" style={{ marginRight: 10 }} />
-              <Text style={s.loginText}>Sign In</Text>
-            </View>
-          )}
-        </LinearGradient>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("/signup")} style={s.switchLink}>
-        <Text style={[s.switchText, { color: colors.mutedForeground }]}>
-          Don't have an account?{" "}
-          <Text style={{ color: "#4361EE", fontFamily: "Inter_600SemiBold" }}>Create one</Text>
-        </Text>
-      </TouchableOpacity>
-
-      <View style={[s.divider, { borderColor: colors.border }]} />
-
-      <View style={s.features}>
-        {[
-          { icon: "book-open", text: "Study notes for CSE & EEE" },
-          { icon: "zap", text: "Flashcards for quick revision" },
-          { icon: "check-circle", text: "Quizzes to test your knowledge" },
-        ].map((f) => (
-          <View key={f.text} style={s.feature}>
-            <Feather name={f.icon as any} size={16} color="#4361EE" style={{ marginRight: 10 }} />
-            <Text style={[s.featureText, { color: colors.mutedForeground }]}>{f.text}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
+function FooterLink({ label }: { label: string }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      {...(webHover(setHovered) as any)}
+    >
+      <Text style={[ds.footerLink, hovered && { color: "#A78BFA" }]}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -339,8 +489,8 @@ const ds = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 0.3,
   },
-  navRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  navLink: { paddingHorizontal: 14, paddingVertical: 6 },
+  navRight: { flexDirection: "row", alignItems: "center", gap: 4 },
+  navLink: { paddingHorizontal: 14, paddingVertical: 7 },
   navLinkText: {
     color: "#6B7280",
     fontSize: 14,
@@ -434,6 +584,8 @@ const ds = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     backgroundColor: "rgba(248,113,113,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(248,113,113,0.2)",
     marginTop: 4,
   },
   errorText: {
@@ -478,10 +630,11 @@ const ds = StyleSheet.create({
     borderTopWidth: 1,
     marginVertical: 8,
   },
-  features: { gap: 14, marginTop: 4 },
+  features: { gap: 4, marginTop: 4 },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 8,
   },
   featureText: {
     color: "#6B7280",
