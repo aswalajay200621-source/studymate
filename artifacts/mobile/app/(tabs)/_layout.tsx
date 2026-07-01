@@ -43,8 +43,7 @@ const NAV_ITEMS = [
   { name: "profile", route: "/(tabs)/profile", label: "Profile", icon: "user" as const },
 ];
 
-function DesktopSidebar() {
-  const colors = useColors();
+function DesktopHeader() {
   const pathname = usePathname();
 
   function isActive(name: string) {
@@ -53,22 +52,15 @@ function DesktopSidebar() {
   }
 
   return (
-    <View
-      style={[
-        desktopStyles.sidebar,
-        { backgroundColor: colors.card, borderRightColor: colors.border },
-      ]}
-    >
-      <View style={desktopStyles.logoRow}>
-        <View style={[desktopStyles.logoCircle, { backgroundColor: colors.primary }]}>
-          <Feather name="book-open" size={20} color="#fff" />
+    <View style={[dh.header, { backgroundColor: "#080B1A", borderBottomColor: "#1E2240" }]}>
+      <View style={dh.left}>
+        <View style={dh.logoBox}>
+          <Feather name="book-open" size={18} color="#A78BFA" />
         </View>
-        <Text style={[desktopStyles.logoText, { color: colors.foreground }]}>
-          StudyMate
-        </Text>
+        <Text style={dh.brandText}>StudyMate</Text>
       </View>
 
-      <View style={desktopStyles.navSection}>
+      <View style={dh.navItems}>
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.name);
           return (
@@ -76,20 +68,18 @@ function DesktopSidebar() {
               key={item.name}
               onPress={() => router.replace(item.route as any)}
               activeOpacity={0.75}
-              style={[
-                desktopStyles.navItem,
-                active && { backgroundColor: colors.primary + "15" },
-              ]}
+              style={dh.navItem}
             >
               <Feather
                 name={item.icon}
-                size={18}
-                color={active ? colors.primary : colors.mutedForeground}
+                size={15}
+                color={active ? "#A78BFA" : "#6B7280"}
+                style={{ marginRight: 6 }}
               />
               <Text
                 style={[
-                  desktopStyles.navLabel,
-                  { color: active ? colors.primary : colors.mutedForeground },
+                  dh.navLabel,
+                  { color: active ? "#A78BFA" : "#6B7280" },
                   active && { fontFamily: "Inter_600SemiBold" },
                 ]}
               >
@@ -98,12 +88,6 @@ function DesktopSidebar() {
             </TouchableOpacity>
           );
         })}
-      </View>
-
-      <View style={[desktopStyles.footer, { borderTopColor: colors.border }]}>
-        <Text style={[desktopStyles.footerText, { color: colors.mutedForeground }]}>
-          Engineering Notes
-        </Text>
       </View>
     </View>
   );
@@ -117,8 +101,8 @@ function ClassicTabLayout() {
   const isDesktop = useIsDesktop();
 
   return (
-    <View style={{ flex: 1, flexDirection: "row" }}>
-      {isDesktop && <DesktopSidebar />}
+    <View style={{ flex: 1, flexDirection: "column" }}>
+      {isDesktop && <DesktopHeader />}
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
@@ -204,55 +188,49 @@ export default function TabLayout() {
   return <ClassicTabLayout />;
 }
 
-const desktopStyles = StyleSheet.create({
-  sidebar: {
-    width: 220,
-    borderRightWidth: 1,
-    flexDirection: "column",
+const dh = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 40,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
-  logoRow: {
+  left: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
   },
-  logoCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+  logoBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#1E1040",
     alignItems: "center",
     justifyContent: "center",
   },
-  logoText: {
-    fontSize: 17,
+  brandText: {
+    color: "#E2E8F0",
+    fontSize: 16,
     fontFamily: "Inter_700Bold",
+    letterSpacing: 0.3,
   },
-  navSection: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: 8,
+  navItems: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   navItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   navLabel: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
-  },
-  footer: {
-    borderTopWidth: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  footerText: {
-    fontSize: 12,
     fontFamily: "Inter_400Regular",
+    letterSpacing: 0.2,
   },
 });

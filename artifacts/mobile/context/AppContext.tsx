@@ -24,7 +24,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(Platform.OS === "web");
 
   useEffect(() => {
     (async () => {
@@ -38,6 +38,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           if (college === "CSE" || college === "EEE") setSelectedCollege(college);
           if (subscribed === "true") setIsSubscribed(true);
           if (theme === "dark") setIsDark(true);
+        } else {
+          const college = localStorage.getItem(COLLEGE_KEY);
+          if (college === "CSE" || college === "EEE") setSelectedCollege(college as College);
         }
       } catch (_) {
       } finally {
@@ -47,7 +50,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const selectCollege = useCallback(async (college: College) => {
-    if (Platform.OS !== "web") await AsyncStorage.setItem(COLLEGE_KEY, college);
+    if (Platform.OS !== "web") {
+      await AsyncStorage.setItem(COLLEGE_KEY, college);
+    } else {
+      localStorage.setItem(COLLEGE_KEY, college);
+    }
     setSelectedCollege(college);
   }, []);
 
@@ -57,7 +64,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const resetCollege = useCallback(async () => {
-    if (Platform.OS !== "web") await AsyncStorage.removeItem(COLLEGE_KEY);
+    if (Platform.OS !== "web") {
+      await AsyncStorage.removeItem(COLLEGE_KEY);
+    } else {
+      localStorage.removeItem(COLLEGE_KEY);
+    }
     setSelectedCollege(null);
   }, []);
 
