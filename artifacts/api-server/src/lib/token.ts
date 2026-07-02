@@ -2,8 +2,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 const SECRET = process.env.SESSION_SECRET ?? "dev-secret-change-me";
 
-export function signToken(payload: Record<string, unknown>): string {
-  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
+export function signToken(payload: Record<string, unknown>, expiresInSeconds = 7 * 24 * 60 * 60): string {
+  const exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
+  const fullPayload = { ...payload, exp };
+  const data = Buffer.from(JSON.stringify(fullPayload)).toString("base64url");
   const sig = createHmac("sha256", SECRET).update(data).digest("base64url");
   return `${data}.${sig}`;
 }
@@ -16,7 +18,11 @@ export function verifyToken(token: string): Record<string, unknown> | null {
     const sigBuf = Buffer.from(sig);
     const expBuf = Buffer.from(expected);
     if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) return null;
-    return JSON.parse(Buffer.from(data, "base64url").toString());
+    const decoded = JSON.parse(Buffer.from(data, "base64url").toString());
+    if (typeof decoded.exp === "number" && decoded.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+    return decoded;
   } catch {
     return null;
   }

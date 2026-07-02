@@ -10,6 +10,10 @@ import { signToken, verifyToken, extractBearer } from "../lib/token";
 
 const router = Router();
 
+if (process.env.NODE_ENV === "production" && (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD === "studymate2024")) {
+  throw new Error("CRITICAL SECURITY ERROR: You must set a strong, non-default ADMIN_PASSWORD in production environment variables.");
+}
+
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "studymate2024";
 
 router.post("/admin/login", (req, res) => {

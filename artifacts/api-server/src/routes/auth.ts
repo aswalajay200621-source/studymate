@@ -4,10 +4,19 @@ import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { ensureMigrated } from "@workspace/db/migrate";
 import { signToken, verifyToken, extractBearer } from "../lib/token";
+import { rateLimit } from "express-rate-limit";
 
 const router = Router();
 
-router.post("/auth/email-login", async (req, res) => {
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Too many attempts from this IP, please try again after 15 minutes." },
+});
+
+router.post("/auth/email-login", authLimiter, async (req, res) => {
   try {
     await ensureMigrated();
     const { email, password } = req.body as { email?: string; password?: string };
@@ -33,7 +42,7 @@ router.post("/auth/email-login", async (req, res) => {
   }
 });
 
-router.post("/auth/email-signup", async (req, res) => {
+router.post("/auth/email-signup", authLimiter, async (req, res) => {
   try {
     await ensureMigrated();
     const { firstName, lastName, email, password, college, year } = req.body as {

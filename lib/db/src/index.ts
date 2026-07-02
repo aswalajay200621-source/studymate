@@ -1,3 +1,12 @@
+import fs from "fs";
+try {
+  if (fs.existsSync(".env")) {
+    process.loadEnvFile(".env");
+  } else if (fs.existsSync("../../.env")) {
+    process.loadEnvFile("../../.env");
+  }
+} catch (e) {}
+
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
