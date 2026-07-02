@@ -23,19 +23,20 @@ async function sendVerificationEmail(to: string, token: string) {
   const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:8081";
   const link = `${baseUrl}/verify?token=${token}`;
 
-  if (process.env.RESEND_API_KEY) {
+  if (process.env.BREVO_API_KEY) {
     try {
-      await fetch("https://api.resend.com/emails", {
+      await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
+          "accept": "application/json",
+          "api-key": process.env.BREVO_API_KEY,
+          "content-type": "application/json",
         },
         body: JSON.stringify({
-          from: "StudyMate <noreply@yourdomain.com>",
-          to,
+          sender: { name: "StudyMate", email: "noreply@yourdomain.com" },
+          to: [{ email: to }],
           subject: "Verify your StudyMate account",
-          html: `
+          htmlContent: `
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
               <h2 style="color:#7C5CFC">Welcome to StudyMate! 🎓</h2>
               <p>Click the button below to verify your email address:</p>
@@ -60,19 +61,20 @@ async function sendResetEmail(to: string, token: string) {
   const baseUrl = process.env.APP_BASE_URL ?? "http://localhost:8081";
   const link = `${baseUrl}/reset-password?token=${token}`;
 
-  if (process.env.RESEND_API_KEY) {
+  if (process.env.BREVO_API_KEY) {
     try {
-      await fetch("https://api.resend.com/emails", {
+      await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
+          "accept": "application/json",
+          "api-key": process.env.BREVO_API_KEY,
+          "content-type": "application/json",
         },
         body: JSON.stringify({
-          from: "StudyMate <noreply@yourdomain.com>",
-          to,
+          sender: { name: "StudyMate", email: "noreply@yourdomain.com" },
+          to: [{ email: to }],
           subject: "Reset your StudyMate password",
-          html: `
+          htmlContent: `
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
               <h2 style="color:#7C5CFC">Reset Password</h2>
               <p>Click the button below to reset your password. This link expires in 1 hour.</p>
