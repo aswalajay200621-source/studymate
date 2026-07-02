@@ -91,18 +91,10 @@ export default function LibraryScreen() {
           showsVerticalScrollIndicator={false}
         >
           {sem1.length > 0 && (
-            <SubjectGroup
-              title="Semester 1"
-              subjects={sem1}
-              colors={colors}
-            />
+            <SubjectGroup title="Semester 1" subjects={sem1} colors={colors} />
           )}
           {sem2.length > 0 && (
-            <SubjectGroup
-              title="Semester 2"
-              subjects={sem2}
-              colors={colors}
-            />
+            <SubjectGroup title="Semester 2" subjects={sem2} colors={colors} />
           )}
           {filtered.length === 0 && (
             <View style={s.empty}>
@@ -131,145 +123,64 @@ function SubjectGroup({
     <View style={sg.group}>
       <Text style={[sg.groupTitle, { color: colors.foreground }]}>{title}</Text>
       {subjects.map((sub) => (
-          <TouchableOpacity
-            key={sub.id}
-            onPress={() => router.push(`/subject/${sub.id}`)}
-            activeOpacity={0.85}
-            style={[
-              sg.card,
-              {
-                backgroundColor: colors.card,
-                borderColor: sub.color + "33",
-              },
-            ]}
-          >
-            <View style={[sg.iconWrap, { backgroundColor: sub.color + "15" }]}>
-              {/^[a-z][a-z0-9-]*$/.test(sub.icon)
-                ? <Ionicons name={sub.icon as any} size={22} color={sub.color} />
-                : <Text style={{ fontSize: 22 }}>{sub.icon}</Text>}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[sg.name, { color: colors.foreground }]}>
-                {sub.name}
-              </Text>
-              <Text style={[sg.code, { color: sub.color }]}>{sub.code}</Text>
-              <Text style={[sg.desc, { color: colors.mutedForeground }]} numberOfLines={1}>
-                {sub.description}
-              </Text>
-              <Text style={[sg.chapters, { color: colors.mutedForeground }]}>
-                {sub.chapterCount} chapter{sub.chapterCount !== 1 ? "s" : ""}
-              </Text>
-            </View>
-            <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity
+          key={sub.id}
+          onPress={() => router.push(`/subject/${sub.id}`)}
+          activeOpacity={0.85}
+          style={[sg.card, { backgroundColor: colors.card, borderColor: sub.color + "33" }]}
+        >
+          <View style={[sg.iconWrap, { backgroundColor: sub.color + "15" }]}>
+            {/^[a-z][a-z0-9-]*$/.test(sub.icon)
+              ? <Ionicons name={sub.icon as any} size={22} color={sub.color} />
+              : <Text style={{ fontSize: 22 }}>{sub.icon}</Text>}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[sg.name, { color: colors.foreground }]}>{sub.name}</Text>
+            <Text style={[sg.code, { color: sub.color }]}>{sub.code}</Text>
+            <Text style={[sg.desc, { color: colors.mutedForeground }]} numberOfLines={1}>
+              {sub.description}
+            </Text>
+            <Text style={[sg.chapters, { color: colors.mutedForeground }]}>
+              {sub.chapterCount} chapter{sub.chapterCount !== 1 ? "s" : ""}
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+        </TouchableOpacity>
+      ))}
     </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  header: {
-    paddingHorizontal: 20,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 2,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 12,
-  },
+  header: { paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: 1 },
+  title:  { fontSize: 26, fontFamily: "Inter_700Bold", marginBottom: 2 },
+  subtitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 12 },
   searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
+    flexDirection: "row", alignItems: "center",
+    borderRadius: 12, borderWidth: 1,
+    paddingHorizontal: 12, paddingVertical: 10, gap: 8,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-  },
-  body: { maxWidth: 860, width: "100%", alignSelf: "center",
-    padding: 16,
-    gap: 8,
-  },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  empty: {
-    alignItems: "center",
-    paddingTop: 80,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-  },
+  searchInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular" },
+  body:  { maxWidth: 860, width: "100%" as any, alignSelf: "center" as any, padding: 16, gap: 8 },
+  center:{ flex: 1, alignItems: "center", justifyContent: "center" },
+  empty: { alignItems: "center", paddingTop: 80, gap: 12 },
+  emptyText: { fontSize: 15, fontFamily: "Inter_400Regular" },
 });
 
 const sg = StyleSheet.create({
-  group: { marginBottom: 8, gap: 10 },
-  groupTitle: {
-    fontSize: 18,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 4,
-    marginTop: 8,
-  },
+  group:      { marginBottom: 8, gap: 10 },
+  groupTitle: { fontSize: 18, fontFamily: "Inter_700Bold", marginBottom: 4, marginTop: 8 },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 16,
-    borderWidth: 1.5,
-    padding: 14,
-    gap: 12,
+    flexDirection: "row", alignItems: "center",
+    borderRadius: 16, borderWidth: 1.5, padding: 14, gap: 12,
   },
   iconWrap: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
+    width: 50, height: 50, borderRadius: 14,
+    alignItems: "center", justifyContent: "center", flexShrink: 0,
   },
-  nameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 2,
-  },
-  name: {
-    fontSize: 15,
-    fontFamily: "Inter_700Bold",
-  },
-  freeBadge: {
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  freeBadgeText: {
-    fontSize: 10,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: 0.5,
-  },
-  code: {
-    fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 2,
-  },
-  desc: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 2,
-  },
-  chapters: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-  },
+  name:     { fontSize: 15, fontFamily: "Inter_700Bold" },
+  code:     { fontSize: 11, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
+  desc:     { fontSize: 12, fontFamily: "Inter_400Regular", marginBottom: 2 },
+  chapters: { fontSize: 12, fontFamily: "Inter_400Regular" },
 });

@@ -17,7 +17,7 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/context/AuthContext";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { Feather } from "@expo/vector-icons";
-import { ParticleMesh } from "@/components/ParticleMesh";
+import { WaveFlow } from "@/components/WaveFlow";
 
 const isWeb = Platform.OS === "web";
 
@@ -276,17 +276,16 @@ function DesktopLogin(props: any) {
 
   return (
     <View style={[ds.root, { backgroundColor: BG }]}>
-      {/* Particle canvas — renders behind everything */}
-      <ParticleMesh />
+      {/* Flowing wave particle streams */}
+      <WaveFlow />
 
       {/* Ambient glow centred behind card */}
       {isWeb && React.createElement("div", {
         style: {
           position: "absolute",
-          width: "700px",
-          height: "700px",
+          width: "600px", height: "600px",
           borderRadius: "50%",
-          background: "radial-gradient(ellipse, rgba(139,92,246,0.13) 0%, transparent 65%)",
+          background: "radial-gradient(ellipse, rgba(109,40,217,0.18) 0%, transparent 65%)",
           top: "50%", left: "50%",
           transform: "translate(-50%, -50%)",
           pointerEvents: "none",
