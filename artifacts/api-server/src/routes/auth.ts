@@ -2,12 +2,14 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
+import { ensureMigrated } from "@workspace/db/migrate";
 import { signToken, verifyToken, extractBearer } from "../lib/token";
 
 const router = Router();
 
 router.post("/auth/email-login", async (req, res) => {
   try {
+    await ensureMigrated();
     const { email, password } = req.body as { email?: string; password?: string };
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
@@ -33,6 +35,7 @@ router.post("/auth/email-login", async (req, res) => {
 
 router.post("/auth/email-signup", async (req, res) => {
   try {
+    await ensureMigrated();
     const { firstName, lastName, email, password, college, year } = req.body as {
       firstName?: string; lastName?: string; email?: string;
       password?: string; college?: string; year?: string;
@@ -66,6 +69,7 @@ router.post("/auth/email-signup", async (req, res) => {
 
 router.get("/auth/user", async (req, res) => {
   try {
+    await ensureMigrated();
     const token = extractBearer(req.headers.authorization);
     if (!token) { res.json({ user: null }); return; }
     const payload = verifyToken(token);

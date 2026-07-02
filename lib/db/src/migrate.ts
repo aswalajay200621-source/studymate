@@ -1,6 +1,6 @@
 /**
  * Runs CREATE TABLE IF NOT EXISTS DDL for every table in the schema.
- * Called once at API server startup — safe to re-run, purely additive.
+ * Called at API server startup with retry + lazy fallback on first request.
  */
 import { pool } from "./index";
 
@@ -71,7 +71,9 @@ const DDL = `
   );
 `;
 
-export async function runMigrations(): Promise<void> {
+let migrationDone = false;
+
+async function attemptMigration(): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query(DDL);
@@ -80,10 +82,39 @@ export async function runMigrations(): Promise<void> {
        WHERE table_schema = 'public' ORDER BY table_name`
     );
     console.log("[db] Tables ready:", rows.map((r: any) => r.table_name).join(", "));
-  } catch (err: any) {
-    console.error("[db] Migration error:", err.message);
-    // Non-fatal — server continues; routes will return 503 if DB is unreachable
+    migrationDone = true;
   } finally {
     client.release();
   }
+}
+
+/** Startup migration: retries up to 8 times with exponential backoff (max ~2 min total). */
+export async function runMigrations(): Promise<void> {
+  const maxAttempts = 8;
+  let delay = 2000; // start at 2 s
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await attemptMigration();
+      return;
+    } catch (err: any) {
+      if (attempt === maxAttempts) {
+        console.error(`[db] Migration failed after ${maxAttempts} attempts:`, err.message);
+        return; // non-fatal — lazy migration will handle it on first request
+      }
+      console.warn(`[db] Migration attempt ${attempt} failed (${err.message}), retrying in ${delay / 1000}s…`);
+      await new Promise((res) => setTimeout(res, delay));
+      delay = Math.min(delay * 1.8, 30_000); // cap at 30 s
+    }
+  }
+}
+
+/**
+ * Lazy migration guard — call this at the top of any route handler.
+ * If the startup migration already succeeded this is a no-op (single flag check).
+ * If it failed, this will attempt the migration now (DB is likely reachable by request time).
+ */
+export async function ensureMigrated(): Promise<void> {
+  if (migrationDone) return;
+  await attemptMigration();
 }
