@@ -26,8 +26,8 @@ export function WaveFlow({ style }: { style?: any }) {
 
     // Two parallel wave ribbons sweeping across the screen
     const WAVES = [
-      { amp: 0.20, freq: 0.75, yBase: 0.52, spread: 40, count: 900 },
-      { amp: 0.17, freq: 0.90, yBase: 0.59, spread: 28, count: 600 },
+      { amp: 0.36, freq: 0.75, yBase: 0.50, spread: 25, count: 2000 },
+      { amp: 0.32, freq: 0.90, yBase: 0.55, spread: 18, count: 1500 },
     ];
 
     interface Pt {
@@ -52,15 +52,15 @@ export function WaveFlow({ style }: { style?: any }) {
         const wv = WAVES[wi];
         for (let i = 0; i < wv.count; i++) {
           const g   = gauss();
-          const off = g * wv.spread * 0.38; // tight ribbon (σ ~0.38)
+          const off = g * wv.spread * 0.15; // tight ribbon
           // alpha falls off with distance from centre: closer = brighter
-          const distFrac = Math.abs(g) / 2.5;
-          const baseA    = Math.max(0.08, (0.70 - distFrac * 0.55) * (Math.random() * 0.4 + 0.6));
+          const distFrac = Math.abs(g);
+          const baseA    = Math.max(0.04, (0.85 - distFrac * 0.60) * (Math.random() * 0.3 + 0.7));
           pts.push({
             nx: Math.random(),
             off,
             a:  baseA,
-            r:  Math.random() * 0.75 + 0.25,
+            r:  Math.random() * 0.6 + 0.2, // slightly smaller particles for a dusty look
             wi,
           });
         }

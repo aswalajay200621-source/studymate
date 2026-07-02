@@ -322,8 +322,6 @@ function DesktopLogin(props: any) {
 
         <View style={ds.navRight}>
           <GlassNavLink label="Login" active />
-          <GlassNavLink label="Notes"      onPress={() => router.push("/(tabs)/library")} />
-          <GlassNavLink label="Flashcards" />
         </View>
       </View>
 
