@@ -24,6 +24,9 @@ if (!dbUrl) {
 export const pool = new Pool({
   connectionString: dbUrl,
   ssl: { rejectUnauthorized: false },
+  max: parseInt(process.env.DB_MAX_CONNECTIONS ?? "10", 10),
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
 });
 export const db = drizzle(pool, { schema });
 

@@ -8,17 +8,22 @@ const DDL = `
   CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
   CREATE TABLE IF NOT EXISTS users (
-    id                VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-    email             VARCHAR UNIQUE,
-    password_hash     VARCHAR,
-    first_name        VARCHAR,
-    last_name         VARCHAR,
-    profile_image_url VARCHAR,
-    college           VARCHAR DEFAULT 'CSE',
-    year              VARCHAR DEFAULT '1',
-    role              VARCHAR DEFAULT 'student',
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                  VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+    email               VARCHAR UNIQUE,
+    password_hash       VARCHAR,
+    first_name          VARCHAR,
+    last_name           VARCHAR,
+    profile_image_url   VARCHAR,
+    college             VARCHAR DEFAULT 'CSE',
+    year                VARCHAR DEFAULT '1',
+    role                VARCHAR DEFAULT 'student',
+    is_verified         BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_token  VARCHAR,
+    reset_token         VARCHAR,
+    reset_token_expires TIMESTAMPTZ,
+    token_version       INTEGER NOT NULL DEFAULT 1,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
   CREATE TABLE IF NOT EXISTS semesters (

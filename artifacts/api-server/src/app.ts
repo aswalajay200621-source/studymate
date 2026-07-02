@@ -46,9 +46,21 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50kb" }));
+app.use(express.urlencoded({ limit: "50kb", extended: true }));
 
 app.use("/api", router);
+
+// Global error handler — catches any unhandled errors thrown in routes
+app.use((err: any, req: any, res: any, next: any) => {
+  const status = err.status ?? err.statusCode ?? 500;
+  const message = status === 413
+    ? "Payload too large — maximum request size is 50kb."
+    : err.message ?? "Internal server error";
+  logger.error({ err, url: req.url, method: req.method }, "[unhandled error]");
+  if (!res.headersSent) {
+    res.status(status).json({ error: message });
+  }
+});
 
 export default app;
