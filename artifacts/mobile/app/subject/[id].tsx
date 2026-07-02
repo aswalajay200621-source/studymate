@@ -182,7 +182,7 @@ const s = StyleSheet.create({
     fontSize: 11,
     fontFamily: "Inter_500Medium",
   },
-  body: { padding: 16, gap: 10 },
+  body: { padding: 16, gap: 10, maxWidth: 860, width: "100%", alignSelf: "center" },
   sectionTitle: {
     fontSize: 20,
     fontFamily: "Inter_700Bold",

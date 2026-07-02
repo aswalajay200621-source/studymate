@@ -332,7 +332,7 @@ const s = StyleSheet.create({
   proBadgeText: { color: "#FFD700", fontSize: 13, fontFamily: "Inter_700Bold" },
   freeBadge: { backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5 },
   freeBadgeText: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  body: { padding: 16, gap: 14 },
+  body: { padding: 16, gap: 14, maxWidth: 860, width: "100%", alignSelf: "center" },
   menuCard: { borderRadius: 16, borderWidth: 1, overflow: "hidden" },
   menuItem: { flexDirection: "row", alignItems: "center", padding: 16, gap: 12 },
   menuIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" },

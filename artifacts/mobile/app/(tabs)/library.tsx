@@ -198,7 +198,7 @@ const s = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Inter_400Regular",
   },
-  body: {
+  body: { maxWidth: 860, width: "100%", alignSelf: "center",
     padding: 16,
     gap: 8,
   },
