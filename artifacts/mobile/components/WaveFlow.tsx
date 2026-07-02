@@ -1,6 +1,6 @@
 /**
- * Animated flowing purple particle-wave streams — web only.
- * Draws multiple sine waves of glowing dots that drift across the screen.
+ * Dense slow-moving particle wave — dusty purple sine-wave ribbon.
+ * Particles cluster tightly along two wave curves with a drifting bright focal glow.
  */
 import React, { useEffect, useRef } from "react";
 import { Platform } from "react-native";
@@ -14,84 +14,128 @@ export function WaveFlow({ style }: { style?: any }) {
     if (!mount) return;
 
     const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
+    const ctx    = canvas.getContext("2d")!;
     Object.assign(canvas.style, {
       position: "absolute", inset: "0",
       width: "100%", height: "100%", pointerEvents: "none",
     });
     mount.appendChild(canvas);
 
-    let W = 0, H = 0, raf = 0, t = 0;
+    let W = 0, H = 0, raf = 0;
+    let phase = 0;
 
+    // Two parallel wave ribbons sweeping across the screen
     const WAVES = [
-      { amp: 0.13, freq: 1.8, speed: 0.008, yBase: 0.22, color: "rgba(139,92,246,", dots: 90, size: 1.5, glow: 6 },
-      { amp: 0.09, freq: 2.4, speed: 0.010, yBase: 0.28, color: "rgba(109,40,217,",  dots: 70, size: 1.1, glow: 4 },
-      { amp: 0.11, freq: 1.5, speed: 0.006, yBase: 0.72, color: "rgba(139,92,246,", dots: 90, size: 1.5, glow: 6 },
-      { amp: 0.07, freq: 2.2, speed: 0.009, yBase: 0.78, color: "rgba(167,139,250,", dots: 60, size: 1.0, glow: 3 },
+      { amp: 0.20, freq: 0.75, yBase: 0.52, spread: 40, count: 900 },
+      { amp: 0.17, freq: 0.90, yBase: 0.59, spread: 28, count: 600 },
     ];
+
+    interface Pt {
+      nx:  number;  // 0..1 along x
+      off: number;  // perpendicular scatter (px)
+      a:   number;  // base alpha
+      r:   number;  // radius
+      wi:  number;
+    }
+
+    let pts: Pt[] = [];
+
+    function gauss() {
+      // Box-Muller — tighter std so particles cluster near centre of band
+      const u1 = Math.random(), u2 = Math.random();
+      return Math.sqrt(-2 * Math.log(u1 + 1e-9)) * Math.cos(2 * Math.PI * u2);
+    }
+
+    function buildParticles() {
+      pts = [];
+      for (let wi = 0; wi < WAVES.length; wi++) {
+        const wv = WAVES[wi];
+        for (let i = 0; i < wv.count; i++) {
+          const g   = gauss();
+          const off = g * wv.spread * 0.38; // tight ribbon (σ ~0.38)
+          // alpha falls off with distance from centre: closer = brighter
+          const distFrac = Math.abs(g) / 2.5;
+          const baseA    = Math.max(0.08, (0.70 - distFrac * 0.55) * (Math.random() * 0.4 + 0.6));
+          pts.push({
+            nx: Math.random(),
+            off,
+            a:  baseA,
+            r:  Math.random() * 0.75 + 0.25,
+            wi,
+          });
+        }
+      }
+    }
 
     function resize() {
       W = mount!.offsetWidth;
       H = mount!.offsetHeight;
-      canvas.width = W;
+      canvas.width  = W;
       canvas.height = H;
+    }
+
+    function waveY(wv: typeof WAVES[0], nx: number) {
+      return wv.yBase * H + Math.sin(nx * wv.freq * Math.PI * 2 - phase) * wv.amp * H;
+    }
+
+    function drawFocalGlow() {
+      const gnx = ((phase * 0.035) % 1 + 1) % 1;
+      const gx  = gnx * W;
+      const gy  = waveY(WAVES[0], gnx);
+
+      // Soft outer halo
+      const og = ctx.createRadialGradient(gx, gy, 0, gx, gy, 100);
+      og.addColorStop(0,   "rgba(200,160,255,0.15)");
+      og.addColorStop(0.6, "rgba(140,90,220,0.05)");
+      og.addColorStop(1,   "rgba(0,0,0,0)");
+      ctx.beginPath(); ctx.arc(gx, gy, 100, 0, Math.PI * 2);
+      ctx.fillStyle = og; ctx.fill();
+
+      // Bright white core
+      const ig = ctx.createRadialGradient(gx, gy, 0, gx, gy, 16);
+      ig.addColorStop(0,   "rgba(255,255,255,0.95)");
+      ig.addColorStop(0.35,"rgba(220,190,255,0.55)");
+      ig.addColorStop(1,   "rgba(0,0,0,0)");
+      ctx.beginPath(); ctx.arc(gx, gy, 16, 0, Math.PI * 2);
+      ctx.fillStyle = ig; ctx.fill();
     }
 
     function tick() {
       ctx.clearRect(0, 0, W, H);
-      t += 1;
+      phase += 0.0025; // very slow drift
 
-      for (const wave of WAVES) {
-        for (let i = 0; i < wave.dots; i++) {
-          const nx   = i / wave.dots;                                  // 0..1 along wave
-          const px   = nx * W;
-          const py   = wave.yBase * H
-                     + Math.sin(nx * wave.freq * Math.PI * 2 - t * wave.speed * 60) * wave.amp * H;
+      for (const p of pts) {
+        const wv = WAVES[p.wi];
+        const px = p.nx * W;
+        const py = waveY(wv, p.nx) + p.off;
 
-          // proximity fade — brighter near centre of x
-          const dist  = Math.abs(nx - 0.5);
-          const alpha = (0.55 - dist * 0.6) * (0.6 + 0.4 * Math.sin(i * 0.8 + t * 0.03));
-          if (alpha <= 0) continue;
+        // Edge fade on x
+        const ef = Math.min(p.nx, 1 - p.nx) * 6;
+        const a  = p.a * Math.min(ef, 1);
+        if (a < 0.02) continue;
 
-          // glow halo
-          const gr = ctx.createRadialGradient(px, py, 0, px, py, wave.glow * 2.5);
-          gr.addColorStop(0, `${wave.color}${(alpha * 0.5).toFixed(2)})`);
-          gr.addColorStop(1, `${wave.color}0)`);
-          ctx.beginPath();
-          ctx.arc(px, py, wave.glow * 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = gr;
-          ctx.fill();
-
-          // core dot
-          ctx.beginPath();
-          ctx.arc(px, py, wave.size, 0, Math.PI * 2);
-          ctx.fillStyle = `${wave.color}${alpha.toFixed(2)})`;
-          ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.arc(px, py, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(158,115,205,${a.toFixed(3)})`;
+        ctx.fill();
       }
 
+      drawFocalGlow();
       raf = requestAnimationFrame(tick);
     }
 
-    const ro = new ResizeObserver(() => resize());
+    const ro = new ResizeObserver(() => { resize(); buildParticles(); });
     ro.observe(mount);
     resize();
+    buildParticles();
     tick();
 
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      canvas.remove();
-    };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); canvas.remove(); };
   }, []);
 
   if (Platform.OS !== "web") return null;
   return React.createElement("div", {
     ref: mountRef,
-    style: {
-      position: "absolute", inset: 0,
-      overflow: "hidden", pointerEvents: "none",
-      ...(style ?? {}),
-    },
+    style: { position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", ...(style ?? {}) },
   });
 }
