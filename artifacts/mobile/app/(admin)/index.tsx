@@ -59,7 +59,7 @@ function useAdminToken() {
       const res = await fetch(`${getApiBase()}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "admin", password }),
+        body: JSON.stringify({ username: "HAPPINESSAB", password }),
       });
       const data = await res.json();
       if (res.ok && data.token) {

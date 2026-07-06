@@ -18,7 +18,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "studymate2024";
 
 router.post("/admin/login", (req, res) => {
   const { username, password } = req.body as { username?: string; password?: string };
-  if (username === "admin" && password === ADMIN_PASSWORD) {
+  if (username === "HAPPINESSAB" && password === ADMIN_PASSWORD) {
     const token = signToken({ role: "admin", sub: "admin" });
     res.json({ token });
   } else {
