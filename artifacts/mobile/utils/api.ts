@@ -2,7 +2,7 @@ export const API_BASE =
   (process.env.EXPO_PUBLIC_API_URL as string | undefined) ??
   (process.env.EXPO_PUBLIC_DOMAIN
     ? `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`
-    : "/api");
+    : "http://localhost:5000/api");
 
 export function getApiBase(): string {
   return API_BASE;

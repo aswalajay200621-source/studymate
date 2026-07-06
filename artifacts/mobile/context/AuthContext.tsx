@@ -53,10 +53,13 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getApiBase(): string {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL as string;
+  }
   if (process.env.EXPO_PUBLIC_DOMAIN) {
     return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
   }
-  return "/api";
+  return "http://localhost:5000/api";
 }
 
 async function secureGet(key: string): Promise<string | null> {
