@@ -7,7 +7,8 @@ import { extractBearer, verifyToken } from "../lib/token";
 import { usersTable } from "@workspace/db";
 
 const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
+const pdfModule = require("pdf-parse");
+const pdf = typeof pdfModule === "function" ? pdfModule : (pdfModule.default || pdfModule);
 
 const router = Router();
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
