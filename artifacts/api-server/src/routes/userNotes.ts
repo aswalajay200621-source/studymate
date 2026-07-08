@@ -1,11 +1,13 @@
+import { createRequire } from "module";
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { eq, desc } from "drizzle-orm";
 import multer from "multer";
-// @ts-ignore
-import pdf from "pdf-parse";
 import { db, userNotesTable } from "@workspace/db";
 import { extractBearer, verifyToken } from "../lib/token";
 import { usersTable } from "@workspace/db";
+
+const require = createRequire(import.meta.url);
+const pdf = require("pdf-parse");
 
 const router = Router();
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
