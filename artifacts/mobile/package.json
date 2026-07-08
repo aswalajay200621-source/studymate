@@ -60,6 +60,7 @@
     "@react-navigation/bottom-tabs": "^7.18.3",
     "expo-auth-session": "~7.0.11",
     "expo-crypto": "~15.0.9",
+    "expo-document-picker": "^57.0.0",
     "expo-secure-store": "~15.0.8",
     "react-native-render-html": "^6.3.4",
     "react-native-webview": "^13.15.0"

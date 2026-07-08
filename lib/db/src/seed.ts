@@ -3,8 +3,6 @@ import {
   semestersTable,
   subjectsTable,
   chaptersTable,
-  flashcardsTable,
-  quizQuestionsTable,
 } from "./schema";
 
 async function main() {
@@ -12,8 +10,6 @@ async function main() {
 
   // 1. Clear existing data (in order of dependencies)
   console.log("🧹 Clearing old seed data...");
-  await db.delete(quizQuestionsTable);
-  await db.delete(flashcardsTable);
   await db.delete(chaptersTable);
   await db.delete(subjectsTable);
   await db.delete(semestersTable);
@@ -183,103 +179,6 @@ async function main() {
       orderIndex: 1,
     },
   ]);
-
-  // 5. Seed Flashcards
-  console.log("🎴 Seeding Flashcards...");
-  await db.insert(flashcardsTable).values([
-    // Computer Programming Flashcards
-    {
-      chapterId: "cp-ch1",
-      question: "What is the size of a standard integer in C on 32/64 bit systems?",
-      answer: "Typically 4 bytes (32 bits).",
-      orderIndex: 1,
-    },
-    {
-      chapterId: "cp-ch1",
-      question: "Which preprocessor directive is used to include standard I/O libraries?",
-      answer: "#include <stdio.h>",
-      orderIndex: 2,
-    },
-    {
-      chapterId: "cp-ch2",
-      question: "What is the main difference between while and do-while loops?",
-      answer: "while is entry-controlled (checks condition first); do-while is exit-controlled (always executes at least once).",
-      orderIndex: 1,
-    },
-
-    // Digital Logic Design Flashcards
-    {
-      chapterId: "dld-ch1",
-      question: "What does De Morgan's Theorem state for (A + B)' ?",
-      answer: "A' • B'",
-      orderIndex: 1,
-    },
-    {
-      chapterId: "dld-ch2",
-      question: "Why are NAND and NOR called universal gates?",
-      answer: "Because any logic function (AND, OR, NOT, etc.) can be constructed using only NAND or only NOR gates.",
-      orderIndex: 1,
-    },
-
-    // Basic Electrical Flashcards
-    {
-      chapterId: "bee-ch1",
-      question: "What is Kirchhoff's Current Law (KCL)?",
-      answer: "The algebraic sum of currents entering a node is equal to zero (conservation of charge).",
-      orderIndex: 1,
-    },
-  ]);
-
-  // 6. Seed Quiz Questions
-  console.log("❓ Seeding Quiz Questions...");
-  await db.insert(quizQuestionsTable).values([
-    // Computer Programming Quizzes
-    {
-      chapterId: "cp-ch1",
-      question: "Which of the following is NOT a valid C data type?",
-      options: ["int", "char", "boolean", "double"],
-      correctIndex: 2,
-      explanation: "C does not have a native 'boolean' keyword. Instead, it traditionally uses 0 for false and non-zero values for true, or includes <stdbool.h>.",
-      orderIndex: 1,
-    },
-    {
-      chapterId: "cp-ch1",
-      question: "What is the return type of the main() function in a standard C program?",
-      options: ["void", "int", "float", "char"],
-      correctIndex: 1,
-      explanation: "The standard signature is `int main()`, returning 0 on success to indicate a clean exit status to the operating system.",
-      orderIndex: 2,
-    },
-    {
-      chapterId: "cp-ch2",
-      question: "Which loop is guaranteed to execute at least once?",
-      options: ["for", "while", "do-while", "none of the above"],
-      correctIndex: 2,
-      explanation: "A do-while loop evaluates its conditional check at the end of the block iteration, guaranteeing at least one execution pass.",
-      orderIndex: 1,
-    },
-
-    // Digital Logic Design Quizzes
-    {
-      chapterId: "dld-ch1",
-      question: "What is the binary representation of decimal number 13?",
-      options: ["1011", "1100", "1101", "1110"],
-      correctIndex: 2,
-      explanation: "13 in binary is calculated as: 8 (2^3) + 4 (2^2) + 0 (2^1) + 1 (2^0) = 1101.",
-      orderIndex: 1,
-    },
-
-    // Basic Electrical Quizzes
-    {
-      chapterId: "bee-ch1",
-      question: "Which theorem replaces a linear network with a single voltage source and series resistor?",
-      options: ["Norton's Theorem", "Superposition Theorem", "Thevenin's Theorem", "Millman's Theorem"],
-      correctIndex: 2,
-      explanation: "Thevenin's Theorem replaces a complex linear network with a single equivalent voltage source (Vth) in series with a resistor (Rth).",
-      orderIndex: 1,
-    },
-  ]);
-
   console.log("🎉 Database seeded successfully!");
   process.exit(0);
 }

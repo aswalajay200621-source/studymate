@@ -39,6 +39,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "books.vertical", selected: "books.vertical.fill" }} />
         <Label>Library</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="make-own">
+        <Icon sf={{ default: "wand.and.stars", selected: "wand.and.stars.fill" }} />
+        <Label>Make Own</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
         <Label>Profile</Label>
@@ -48,9 +52,10 @@ function NativeTabLayout() {
 }
 
 const NAV_ITEMS = [
-  { name: "index",   route: "/(tabs)",         label: "Home",    icon: "home"      as const },
-  { name: "library", route: "/(tabs)/library",  label: "Library", icon: "book-open" as const },
-  { name: "profile", route: "/(tabs)/profile",  label: "Profile", icon: "user"      as const },
+  { name: "index",   route: "/(tabs)",         label: "Home",     icon: "home"      as const },
+  { name: "library", route: "/(tabs)/library",  label: "Library",  icon: "book-open" as const },
+  { name: "make-own", route: "/(tabs)/make-own", label: "Make Own", icon: "zap"       as const },
+  { name: "profile", route: "/(tabs)/profile",  label: "Profile",  icon: "user"      as const },
 ];
 
 function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean }) {
@@ -206,6 +211,16 @@ function ClassicTabLayout() {
                 isIOS
                   ? <SymbolView name="books.vertical" tintColor={color} size={24} />
                   : <Feather name="book-open" size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="make-own"
+            options={{
+              title: "Make Own",
+              tabBarIcon: ({ color }) =>
+                isIOS
+                  ? <SymbolView name="wand.and.stars" tintColor={color} size={24} />
+                  : <Feather name="zap" size={22} color={color} />,
             }}
           />
           <Tabs.Screen

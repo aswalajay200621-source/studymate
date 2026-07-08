@@ -3,3 +3,4 @@ export * from "./semesters";
 export * from "./subjects";
 export * from "./chapters";
 export * from "./users";
+export * from "./userNotes";
