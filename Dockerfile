@@ -7,22 +7,27 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Copy lockfile and workspace configurations
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY artifacts/api-server/package.json ./artifacts/api-server/
-COPY lib/db/package.json ./lib/db/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json tsconfig.json ./
 
-# Copy other package.json files in workspace to cache dependencies
+# Copy package.json files for all workspace packages (for dependency resolution)
+COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/mobile/package.json ./artifacts/mobile/
 COPY artifacts/mockup-sandbox/package.json ./artifacts/mockup-sandbox/
+COPY lib/db/package.json ./lib/db/
+COPY lib/api-zod/package.json ./lib/api-zod/
+COPY lib/api-client-react/package.json ./lib/api-client-react/
 
-# Install dependencies (only what's needed for build/running)
+# Install all dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the application code
-COPY . .
+# Copy source code
+COPY lib/ ./lib/
+COPY artifacts/api-server/ ./artifacts/api-server/
 
-# Build the API server and workspace libraries
-RUN pnpm run build
+# Build only the API server and its library dependencies
+RUN pnpm --filter @workspace/db run build --if-present || true
+RUN pnpm --filter @workspace/api-zod run build --if-present || true
+RUN pnpm --filter @workspace/api-server run build
 
 # Stage 2: Production runner
 FROM node:24-alpine AS runner
@@ -31,15 +36,14 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV=production
-ENV PORT=5000
+ENV PORT=10000
 
-# Copy the bundled server and pino dependencies
+# Copy the bundled dist and all node_modules (esbuild bundles everything)
 COPY --from=builder /app/artifacts/api-server/dist ./dist
-COPY --from=builder /app/artifacts/api-server/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
 # Expose port
-EXPOSE 5000
+EXPOSE 10000
 
 # Run the API server
 CMD ["node", "--enable-source-maps", "./dist/index.mjs"]
