@@ -1,0 +1,19 @@
+.git
+.gitignore
+*.md
+.env
+
+# Skip all node_modules (pnpm will install fresh)
+node_modules
+**/node_modules
+
+# Skip mobile and mockup (not needed for API server)
+artifacts/mobile/static-build
+artifacts/mobile/.metro-cache
+artifacts/mockup-sandbox
+
+# Skip dist (will be rebuilt)
+artifacts/api-server/dist
+
+# Skip attached assets and scripts
+attached_assets
