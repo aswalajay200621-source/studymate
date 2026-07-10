@@ -7,9 +7,9 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Copy lockfile and workspace configurations
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json tsconfig.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json tsconfig.json .npmrc ./
 
-# Copy package.json files for all workspace packages (for dependency resolution)
+# Copy package.json files for all workspace packages (needed for pnpm workspace resolution)
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/mobile/package.json ./artifacts/mobile/
 COPY artifacts/mockup-sandbox/package.json ./artifacts/mockup-sandbox/
@@ -20,13 +20,11 @@ COPY lib/api-client-react/package.json ./lib/api-client-react/
 # Install all dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy source code for api-server and shared libs only
 COPY lib/ ./lib/
 COPY artifacts/api-server/ ./artifacts/api-server/
 
-# Build only the API server and its library dependencies
-RUN pnpm --filter @workspace/db run build --if-present || true
-RUN pnpm --filter @workspace/api-zod run build --if-present || true
+# Build only the API server (skips mobile/mockup builds)
 RUN pnpm --filter @workspace/api-server run build
 
 # Stage 2: Production runner
@@ -38,9 +36,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=10000
 
-# Copy the bundled dist and all node_modules (esbuild bundles everything)
+# Copy the bundled dist output
 COPY --from=builder /app/artifacts/api-server/dist ./dist
+
+# Copy node_modules for external packages (pdf-parse, multer, etc.)
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/artifacts/api-server/node_modules ./artifacts/api-server/node_modules
 
 # Expose port
 EXPOSE 10000
