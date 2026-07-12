@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBase } from "@/utils/api";
+import { useIsDesktop } from "@/hooks/useIsDesktop";
 
 type AdminTab = "semesters" | "subjects" | "chapters";
 

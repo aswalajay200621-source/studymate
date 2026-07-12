@@ -40,7 +40,7 @@ function NativeTabLayout() {
         <Label>Library</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="make-own">
-        <Icon sf={{ default: "wand.and.stars", selected: "wand.and.stars.fill" }} />
+        <Icon sf={{ default: "wand.and.stars", selected: "wand.and.stars" as any }} />
         <Label>Make Own</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
