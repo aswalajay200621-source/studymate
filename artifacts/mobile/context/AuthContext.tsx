@@ -54,7 +54,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getApiBase(): string {
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL as string;
+    const url = process.env.EXPO_PUBLIC_API_URL as string;
+    return url.endsWith("/api") || url.endsWith("/api/")
+      ? url.replace(/\/+$/, "")
+      : `${url.replace(/\/+$/, "")}/api`;
   }
   if (process.env.EXPO_PUBLIC_DOMAIN) {
     return `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;

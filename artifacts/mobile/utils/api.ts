@@ -1,8 +1,16 @@
-export const API_BASE =
-  (process.env.EXPO_PUBLIC_API_URL as string | undefined) ??
-  (process.env.EXPO_PUBLIC_DOMAIN
+const getFormattedApiUrl = (): string => {
+  const url = process.env.EXPO_PUBLIC_API_URL;
+  if (url) {
+    return url.endsWith("/api") || url.endsWith("/api/")
+      ? url.replace(/\/+$/, "")
+      : `${url.replace(/\/+$/, "")}/api`;
+  }
+  return process.env.EXPO_PUBLIC_DOMAIN
     ? `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`
-    : "http://localhost:5000/api");
+    : "http://localhost:5000/api";
+};
+
+export const API_BASE = getFormattedApiUrl();
 
 export function getApiBase(): string {
   return API_BASE;
