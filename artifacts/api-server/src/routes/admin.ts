@@ -14,11 +14,12 @@ if (process.env.NODE_ENV === "production" && (!process.env.ADMIN_PASSWORD || pro
   throw new Error("CRITICAL SECURITY ERROR: You must set a strong, non-default ADMIN_PASSWORD in production environment variables.");
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "studymate2024";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "aswalbenitta";
 
 router.post("/admin/login", (req, res) => {
   const { username, password } = req.body as { username?: string; password?: string };
-  if (username === "HAPPINESSAB" && password === ADMIN_PASSWORD) {
+  const allowedUsernames = ["HAPPINESSAB", "happinessab2025@gmail.com"];
+  if (username && allowedUsernames.includes(username) && password === ADMIN_PASSWORD) {
     const token = signToken({ role: "admin", sub: "admin" });
     res.json({ token });
   } else {

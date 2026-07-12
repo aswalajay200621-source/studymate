@@ -1,8 +1,10 @@
+import { eq } from "drizzle-orm";
 import { db } from "./index";
 import {
   semestersTable,
   subjectsTable,
   chaptersTable,
+  usersTable,
 } from "./schema";
 
 async function main() {
@@ -13,6 +15,17 @@ async function main() {
   await db.delete(chaptersTable);
   await db.delete(subjectsTable);
   await db.delete(semestersTable);
+  await db.delete(usersTable).where(eq(usersTable.email, "happinessab2025@gmail.com"));
+
+  console.log("👤 Seeding Admin User...");
+  await db.insert(usersTable).values({
+    email: "happinessab2025@gmail.com",
+    passwordHash: "$2b$10$5esH346XdphD1IMuq2i75u4I/ni6redSwua5F/XXH7akvf1Qh.fIi",
+    firstName: "Happiness",
+    lastName: "AB",
+    role: "admin",
+    isVerified: true,
+  });
 
   // 2. Seed Semesters
   console.log("📚 Seeding Semesters...");
