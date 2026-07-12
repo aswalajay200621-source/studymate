@@ -18,7 +18,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBase } from "@/utils/api";
-import { useIsDesktop } from "@/hooks/useIsDesktop";
 
 type AdminTab = "semesters" | "subjects" | "chapters";
 
@@ -48,10 +47,16 @@ interface Chapter {
   orderIndex: number;
 }
 
-function useAdminToken() {
-  const [adminToken, setAdminToken] = useState<string | null>(null);
+function useAdminToken(sessionToken: string | null) {
+  const [adminToken, setAdminToken] = useState<string | null>(sessionToken);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (sessionToken && !adminToken) {
+      setAdminToken(sessionToken);
+    }
+  }, [sessionToken, adminToken]);
 
   const login = useCallback(async (password: string) => {
     setTokenLoading(true);
@@ -118,9 +123,9 @@ function EmptyState({ icon, message }: { icon: string; message: string }) {
 }
 
 export default function AdminDashboard() {
-  const { logout } = useAuth();
+  const { logout, token: sessionToken } = useAuth();
   const insets = useSafeAreaInsets();
-  const { adminToken, tokenLoading, loginError, login, adminFetch } = useAdminToken();
+  const { adminToken, tokenLoading, loginError, login, adminFetch } = useAdminToken(sessionToken);
 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -345,66 +350,29 @@ export default function AdminDashboard() {
   const botPad = Platform.OS === "web" ? 0 : insets.bottom;
 
   if (!adminToken) {
-    const isDesktop = useIsDesktop();
     return (
-      <View style={[s.root, { backgroundColor: "#09090B", justifyContent: "center", alignItems: "center" }]}>
-        <View style={isDesktop ? { width: 440, padding: 24 } : { width: "100%", padding: 20 }}>
-          
-          <View style={{ alignItems: "center", marginBottom: 32 }}>
-            <View style={{
-              width: 56, height: 56, borderRadius: 16,
-              backgroundColor: "rgba(139,92,246,0.15)",
-              alignItems: "center", justifyContent: "center",
-              marginBottom: 16,
-              borderWidth: 1, borderColor: "rgba(139,92,246,0.3)"
-            }}>
-              <Feather name="shield" size={24} color="#A78BFA" />
-            </View>
-            <Text style={{ color: "#E2E8F0", fontSize: 24, fontFamily: "Inter_700Bold", marginBottom: 8 }}>
-              Admin Panel
-            </Text>
-            <Text style={{ color: "#6B7280", fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" }}>
-              Enter your admin password to continue
-            </Text>
+      <View style={[s.root, { backgroundColor: "#F8F9FC" }]}>
+        <LinearGradient
+          colors={["#4361EE", "#7C3AED"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[s.loginHeader, { paddingTop: topPad + 10 }]}
+        >
+          <View style={s.headerLogo}>
+            <Text style={{ fontSize: 22 }}>📚</Text>
           </View>
+          <Text style={s.loginTitle}>Admin Panel</Text>
+          <Text style={s.loginSubtitle}>Enter your admin password to continue</Text>
+        </LinearGradient>
 
-          <View style={{
-            backgroundColor: "rgba(255,255,255,0.06)",
-            borderRadius: 20,
-            padding: 24,
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.08)",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 16,
-            elevation: 8,
-          }}>
-            <Text style={{ color: "#6B7280", fontSize: 12, fontFamily: "Inter_600SemiBold", letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>
-              Password
-            </Text>
-            
-            <View style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 16,
-            }}>
+        <View style={s.loginBody}>
+          <View style={s.loginCard}>
+            <Text style={s.loginLabel}>Password</Text>
+            <View style={s.passwordRow}>
               <TextInput
-                style={{
-                  flex: 1,
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.08)",
-                  borderRadius: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  fontSize: 15,
-                  fontFamily: "Inter_400Regular",
-                  color: "#E2E8F0",
-                }}
+                style={[s.fieldInput, { flex: 1, marginBottom: 0 }]}
                 placeholder="Enter admin password"
-                placeholderTextColor="#4B5563"
+                placeholderTextColor="#94A3B8"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -413,90 +381,41 @@ export default function AdminDashboard() {
                 onSubmitEditing={() => { if (password) login(password); }}
                 returnKeyType="go"
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword((v) => !v)}
-                style={{
-                  padding: 12,
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: "rgba(255,255,255,0.08)",
-                }}
-              >
-                <Feather name={showPassword ? "eye-off" : "eye"} size={18} color="#6B7280" />
+              <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={s.eyeBtn}>
+                <Feather name={showPassword ? "eye-off" : "eye"} size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
 
             {!!loginError && (
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: "rgba(239,68,68,0.15)",
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 16,
-                borderWidth: 1,
-                borderColor: "rgba(239,68,68,0.25)"
-              }}>
-                <Feather name="alert-circle" size={14} color="#F87171" />
-                <Text style={{ color: "#F87171", fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 }}>
-                  {loginError}
-                </Text>
+              <View style={s.errorBox}>
+                <Feather name="alert-circle" size={14} color="#DC2626" />
+                <Text style={s.errorText}>{loginError}</Text>
               </View>
             )}
 
             <TouchableOpacity
               onPress={() => { if (password) login(password); }}
               disabled={tokenLoading || !password}
-              style={{
-                borderRadius: 12,
-                overflow: "hidden",
-                opacity: (!password || tokenLoading) ? 0.6 : 1,
-                marginBottom: 16,
-              }}
+              style={[s.loginBtn, (!password || tokenLoading) && { opacity: 0.6 }]}
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={["#8B5CF6", "#6D28D9"]}
+                colors={["#4361EE", "#7C3AED"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={{ height: 50, alignItems: "center", justifyContent: "center" }}
+                style={s.loginBtnGrad}
               >
-                {tokenLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={{ color: "#fff", fontSize: 15, fontFamily: "Inter_700Bold" }}>
-                    Unlock Admin Panel
-                  </Text>
-                )}
+                {tokenLoading
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={s.loginBtnText}>Unlock Admin Panel</Text>
+                }
               </LinearGradient>
             </TouchableOpacity>
 
-            <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: 8,
-              borderTopWidth: 1,
-              borderColor: "rgba(255,255,255,0.06)",
-              paddingTop: 16,
-            }}>
-              <TouchableOpacity onPress={() => router.replace("/(tabs)")} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Feather name="home" size={14} color="#6B7280" />
-                <Text style={{ color: "#6B7280", fontSize: 14, fontFamily: "Inter_500Medium" }}>
-                  Student Home
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleSignOut} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Feather name="log-out" size={14} color="#F87171" />
-                <Text style={{ color: "#F87171", fontSize: 14, fontFamily: "Inter_500Medium" }}>
-                  Sign Out
-                </Text>
-              </TouchableOpacity>
-            </View>
-
+            <TouchableOpacity onPress={() => router.back()} style={s.backLink}>
+              <Feather name="arrow-left" size={14} color="#64748B" />
+              <Text style={s.backLinkText}>Go back</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
