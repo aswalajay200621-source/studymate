@@ -224,16 +224,46 @@ export default function AdminDashboard() {
     try {
       if (modal.kind === "semester") {
         if (!semForm.id || !semForm.name) throw new Error("ID and Name are required");
-        await adminFetch("/admin/semesters", { method: "POST", body: JSON.stringify({ id: semForm.id.trim(), name: semForm.name.trim(), college: semForm.college, orderIndex: semForm.orderIndex }) });
+        await adminFetch("/admin/semesters", {
+          method: "POST",
+          body: JSON.stringify({
+            id: semForm.id.trim(),
+            name: semForm.name.trim(),
+            college: semForm.college,
+            orderIndex: Number(semForm.orderIndex) || 0,
+          }),
+        });
         await loadData();
       } else if (modal.kind === "subject") {
         if (!subForm.id || !subForm.name || !subForm.code) throw new Error("ID, Name and Code are required");
-        await adminFetch("/admin/subjects", { method: "POST", body: JSON.stringify({ id: subForm.id.trim(), name: subForm.name.trim(), code: subForm.code.trim().toUpperCase(), semester: subForm.semester, semesterId: modal.semesterId, college: subForm.college, description: subForm.description, color: subForm.color, icon: subForm.icon }) });
+        await adminFetch("/admin/subjects", {
+          method: "POST",
+          body: JSON.stringify({
+            id: subForm.id.trim(),
+            name: subForm.name.trim(),
+            code: subForm.code.trim().toUpperCase(),
+            semester: Number(subForm.semester) || 1,
+            semesterId: modal.semesterId,
+            college: subForm.college,
+            description: subForm.description,
+            color: subForm.color,
+            icon: subForm.icon,
+          }),
+        });
         await loadData();
       } else {
         if (!chapForm.title) throw new Error("Chapter title is required");
         const id = chapForm.id.trim() || `chap-${Date.now()}`;
-        await adminFetch("/admin/chapters", { method: "POST", body: JSON.stringify({ id, subjectId: modal.subjectId, title: chapForm.title.trim(), orderIndex: chapForm.orderIndex, ...(chapHtml ? { contentHtml: chapHtml } : {}) }) });
+        await adminFetch("/admin/chapters", {
+          method: "POST",
+          body: JSON.stringify({
+            id,
+            subjectId: modal.subjectId,
+            title: chapForm.title.trim(),
+            orderIndex: Number(chapForm.orderIndex) || 0,
+            ...(chapHtml ? { contentHtml: chapHtml } : {}),
+          }),
+        });
         await loadChapters(modal.subjectId);
       }
       setModal(null);
