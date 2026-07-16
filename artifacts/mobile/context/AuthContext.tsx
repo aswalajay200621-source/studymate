@@ -93,14 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  const fetchUser = useCallback(async (sid?: string) => {
+  const fetchUser = useCallback(async (sid?: string): Promise<AuthUser | null> => {
     try {
       const storedToken = sid ?? (await secureGet(AUTH_TOKEN_KEY));
       if (!storedToken) {
         setUser(null);
         setToken(null);
         setIsAuthLoading(false);
-        return;
+        return null;
       }
 
       const apiBase = getApiBase();
@@ -123,14 +123,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(normalized);
         setToken(storedToken);
         await secureSet(AUTH_TOKEN_KEY, storedToken);
+        return normalized;
       } else {
         await secureDelete(AUTH_TOKEN_KEY);
         setUser(null);
         setToken(null);
+        return null;
       }
     } catch {
       setUser(null);
       setToken(null);
+      return null;
     } finally {
       setIsAuthLoading(false);
     }
@@ -157,10 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.token) {
         await secureSet(AUTH_TOKEN_KEY, data.token);
         setIsAuthLoading(true);
-        await fetchUser(data.token);
-        // Redirect based on role returned from the API login response
-        const role = data.user?.role ?? "student";
-        if (role === "admin") {
+        // fetchUser now returns the user — read role from it for the redirect
+        const loggedInUser = await fetchUser(data.token);
+        if (loggedInUser?.role === "admin") {
           router.replace("/(admin)");
         } else {
           router.replace("/(tabs)");
