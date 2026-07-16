@@ -194,7 +194,7 @@ router.post("/auth/email-login", authLimiter, async (req, res) => {
       return;
     }
     const token = signToken({ userId: user.id, role: user.role, tv: user.tokenVersion });
-    res.json({ token });
+    res.json({ token, user: userResponse(user) });
   } catch (err: any) {
     console.error("[auth/email-login]", err?.message);
     res.status(503).json({ error: "Service temporarily unavailable. Please try again shortly." });

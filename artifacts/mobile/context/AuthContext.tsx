@@ -157,12 +157,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: data.error ?? "Login failed. Please try again." };
       }
 
-      if (data.token) {
+      if (data.token && data.user) {
         await secureSet(AUTH_TOKEN_KEY, data.token);
-        setIsAuthLoading(true);
-        // fetchUser now returns the user — read role from it for the redirect
-        const loggedInUser = await fetchUser(data.token);
-        if (loggedInUser?.role === "admin") {
+        // Build the normalized user directly from the login response — no second API call needed
+        const u = data.user;
+        const normalized: AuthUser = {
+          id: u.id,
+          name: [u.firstName, u.lastName].filter(Boolean).join(" ") || u.email || "User",
+          email: u.email ?? null,
+          college: u.college ?? "CSE",
+          year: u.year ?? "1",
+          role: u.role === "admin" ? "admin" : "student",
+          profileImageUrl: u.profileImageUrl ?? null,
+        };
+        setUser(normalized);
+        setToken(data.token);
+        setIsAuthLoading(false);
+        // Role is known immediately — redirect without any second network call
+        if (normalized.role === "admin") {
           router.replace("/(admin)");
         } else {
           router.replace("/(tabs)");
@@ -172,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return { error: "Network error. Please check your connection." };
     }
-  }, [fetchUser]);
+  }, []);
 
   const emailSignup = useCallback(async (data: EmailSignupData): Promise<EmailLoginResult> => {
     try {
