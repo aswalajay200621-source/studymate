@@ -17,16 +17,23 @@ import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 
-// ─── design tokens ────────────────────────────────────────────────────────────
-const BG        = "#09090B";
-const BORDER    = "rgba(255,255,255,0.08)";
-const PURPLE    = "#8B5CF6";
-const PURPLE_TXT= "#A78BFA";
-const PURPLE_LIT= "#C4B5FD";
-const MUTED     = "#6B7280";
-const FG        = "#E2E8F0";
-const isWeb     = Platform.OS === "web";
-// ──────────────────────────────────────────────────────────────────────────────
+const isWeb = Platform.OS === "web";
+
+const NAV_ITEMS = [
+  { name: "index",    route: "/(tabs)",          label: "Home",     icon: "home"      as const },
+  { name: "library",  route: "/(tabs)/library",   label: "Library",  icon: "book-open" as const },
+  { name: "make-own", route: "/(tabs)/make-own",  label: "Make Own", icon: "zap"       as const },
+  { name: "profile",  route: "/(tabs)/profile",   label: "Profile",  icon: "user"      as const },
+];
+
+// Custom CSS Injector for Web (to import fonts and support hover styles)
+function InjectWebLayoutStyles() {
+  if (!isWeb) return null;
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  `;
+  return React.createElement("style", { dangerouslySetInnerHTML: { __html: css } });
+}
 
 function NativeTabLayout() {
   return (
@@ -40,7 +47,7 @@ function NativeTabLayout() {
         <Label>Library</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="make-own">
-        <Icon sf={{ default: "wand.and.stars", selected: "wand.and.stars" as any }} />
+        <Icon sf={{ default: "wand.and.stars", selected: "wand.and.stars.fill" }} />
         <Label>Make Own</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
@@ -51,14 +58,8 @@ function NativeTabLayout() {
   );
 }
 
-const NAV_ITEMS = [
-  { name: "index",   route: "/(tabs)",         label: "Home",     icon: "home"      as const },
-  { name: "library", route: "/(tabs)/library",  label: "Library",  icon: "book-open" as const },
-  { name: "make-own", route: "/(tabs)/make-own", label: "Make Own", icon: "zap"       as const },
-  { name: "profile", route: "/(tabs)/profile",  label: "Profile",  icon: "user"      as const },
-];
-
 function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean }) {
+  const colors = useColors();
   const [hov, setHov] = useState(false);
   const lit = active || hov;
 
@@ -72,14 +73,11 @@ function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean 
       } : {})}
       style={[
         dh.navItem,
+        { borderColor: "transparent" },
         lit && {
-          backgroundColor: active
-            ? "rgba(139,92,246,0.18)"
-            : "rgba(139,92,246,0.10)",
-          borderColor: active
-            ? "rgba(139,92,246,0.28)"
-            : "rgba(139,92,246,0.14)",
-          ...(isWeb ? { boxShadow: "0 0 12px rgba(139,92,246,0.14)" } : {}),
+          backgroundColor: active ? colors.secondary : "rgba(184, 147, 90, 0.08)",
+          borderColor: active ? colors.border : "rgba(184, 147, 90, 0.15)",
+          ...(isWeb ? { boxShadow: "0 2px 8px rgba(0,0,0,0.05)" } : {}),
         },
         isWeb ? { transition: "all 0.25s ease" } as any : {},
       ] as any}
@@ -87,13 +85,16 @@ function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean 
       <Feather
         name={item.icon}
         size={15}
-        color={active ? PURPLE_LIT : hov ? PURPLE_TXT : MUTED}
+        color={active ? colors.text : hov ? colors.accent : colors.mutedForeground}
         style={{ marginRight: 6 }}
       />
       <Text style={[
         dh.navLabel,
-        { color: active ? PURPLE_LIT : hov ? PURPLE_TXT : MUTED },
-        lit && { fontFamily: "Inter_600SemiBold" },
+        {
+          color: active ? colors.text : hov ? colors.accent : colors.mutedForeground,
+          fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+        },
+        active && { fontWeight: "600" },
       ]}>
         {item.label}
       </Text>
@@ -102,6 +103,8 @@ function NavItem({ item, active }: { item: typeof NAV_ITEMS[0]; active: boolean 
 }
 
 function DesktopHeader() {
+  const colors = useColors();
+  const { isDark, toggleTheme } = useApp();
   const pathname = usePathname();
   const [logoHov, setLogoHov] = useState(false);
 
@@ -113,17 +116,17 @@ function DesktopHeader() {
   return (
     <View style={[
       dh.header,
+      {
+        backgroundColor: colors.card,
+        borderBottomColor: colors.border,
+      },
       isWeb ? {
         backdropFilter: "blur(24px)",
         WebkitBackdropFilter: "blur(24px)",
-        backgroundColor: "rgba(9,9,11,0.80)",
-        borderBottomColor: "rgba(139,92,246,0.12)",
-        boxShadow: "0 1px 0 rgba(139,92,246,0.07), 0 4px 24px rgba(0,0,0,0.45)",
-      } as any : {
-        backgroundColor: BG,
-        borderBottomColor: BORDER,
-      },
+        boxShadow: "0 1px 0 rgba(184,147,90,0.06), 0 4px 20px rgba(0,0,0,0.05)",
+      } as any : {},
     ]}>
+      <InjectWebLayoutStyles />
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => router.replace("/(tabs)")}
@@ -135,48 +138,79 @@ function DesktopHeader() {
       >
         <View style={[
           dh.logoBox,
-          logoHov && isWeb && {
-            backgroundColor: "rgba(139,92,246,0.22)",
-            boxShadow: "0 0 16px rgba(139,92,246,0.38)",
-          } as any,
+          {
+            backgroundColor: logoHov ? colors.accent : colors.primary,
+            borderColor: colors.border,
+            borderWidth: 1,
+          },
           isWeb ? { transition: "all 0.25s ease" } as any : {},
         ]}>
-          <Feather name="book-open" size={18} color={logoHov ? PURPLE_LIT : PURPLE_TXT} />
+          <Feather name="book-open" size={17} color={logoHov ? colors.primaryForeground : colors.accent} />
         </View>
-        <Text style={[dh.brandText, logoHov && { color: PURPLE_LIT }]}>StudyMate</Text>
+        <Text style={[
+          dh.brandText,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "700" as any,
+          }
+        ]}>
+          StudyMate
+        </Text>
       </TouchableOpacity>
 
-      <View style={dh.navItems}>
-        {NAV_ITEMS.map((item) => (
-          <NavItem key={item.name} item={item} active={isActive(item.name)} />
-        ))}
+      <View style={dh.rightContainer}>
+        {/* Navigation Items */}
+        <View style={dh.navItems}>
+          {NAV_ITEMS.map((item) => (
+            <NavItem key={item.name} item={item} active={isActive(item.name)} />
+          ))}
+        </View>
+
+        {/* Theme Toggle Option */}
+        <TouchableOpacity
+          onPress={toggleTheme}
+          style={[
+            dh.themeToggle,
+            { backgroundColor: colors.secondary, borderColor: colors.border }
+          ]}
+          activeOpacity={0.8}
+        >
+          <Feather name={isDark ? "sun" : "moon"} size={14} color={colors.text} />
+          <Text style={[
+            dh.themeToggleText,
+            { color: colors.text, fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System" }
+          ]}>
+            {isDark ? "Light" : "Dark"}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 function ClassicTabLayout() {
-  const colors    = useColors();
+  const colors = useColors();
   const { isDark } = useApp();
-  const isIOS     = Platform.OS === "ios";
+  const isIOS = Platform.OS === "ios";
   const isDesktop = useIsDesktop();
 
   return (
-    <View style={{ flex: 1, flexDirection: "column", backgroundColor: BG }}>
+    <View style={{ flex: 1, flexDirection: "column", backgroundColor: colors.background }}>
       {isDesktop && <DesktopHeader />}
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor:   PURPLE_TXT,
-            tabBarInactiveTintColor: MUTED,
+            tabBarActiveTintColor: colors.text,
+            tabBarInactiveTintColor: colors.mutedForeground,
             headerShown: false,
             tabBarStyle: isDesktop
               ? { display: "none" }
               : {
                   position: "absolute",
-                  backgroundColor: isIOS ? "transparent" : BG,
-                  borderTopWidth: isWeb ? 1 : 0,
-                  borderTopColor: BORDER,
+                  backgroundColor: isIOS ? "transparent" : colors.card,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border,
                   elevation: 0,
                   ...(isWeb ? { height: 84 } : {}),
                 },
@@ -185,11 +219,11 @@ function ClassicTabLayout() {
               : isIOS ? (
                 <BlurView
                   intensity={100}
-                  tint={isDark ? "dark" : "systemChromeMaterialDark"}
+                  tint={isDark ? "dark" : "light"}
                   style={StyleSheet.absoluteFill}
                 />
               ) : isWeb ? (
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: BG }]} />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
               ) : null,
           }}
         >
@@ -251,16 +285,22 @@ const dh = StyleSheet.create({
   },
   left:  { flexDirection: "row", alignItems: "center", gap: 10 },
   logoBox: {
-    width: 34, height: 34, borderRadius: 10,
-    backgroundColor: "rgba(139,92,246,0.12)",
+    width: 32, height: 32, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
   },
-  brandText: { color: FG, fontSize: 16, fontFamily: "Inter_700Bold", letterSpacing: 0.3 },
+  brandText: { fontSize: 18, letterSpacing: 0.3 },
+  rightContainer: { flexDirection: "row", alignItems: "center", gap: 16 },
   navItems:  { flexDirection: "row", alignItems: "center", gap: 4 },
   navItem: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 10, borderWidth: 1, borderColor: "transparent",
+    borderRadius: 8, borderWidth: 1,
   },
-  navLabel: { fontSize: 14, fontFamily: "Inter_400Regular", letterSpacing: 0.2 },
+  navLabel: { fontSize: 14, letterSpacing: 0.2 },
+  themeToggle: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 8, borderWidth: 1,
+  },
+  themeToggleText: { fontSize: 13, fontWeight: "600" },
 });

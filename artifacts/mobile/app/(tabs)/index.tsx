@@ -16,21 +16,8 @@ import { useApp } from "@/context/AppContext";
 import { COLLEGES } from "@/data/content";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
 import { useApiSubjects } from "@/hooks/useApiSubjects";
-import { DotGrid } from "@/components/DotGrid";
 
-// ─── design tokens ────────────────────────────────────────────────────────────
-const BG        = "#09090B";
-const GLASS     = "rgba(255,255,255,0.06)";
-const GLASS_HOV = "rgba(255,255,255,0.10)";
-const BORDER    = "rgba(255,255,255,0.08)";
-const PURPLE    = "#8B5CF6";
-const PURPLE_DIM= "rgba(139,92,246,0.15)";
-const PURPLE_TXT= "#A78BFA";
-const PURPLE_LIT= "#C4B5FD";
-const MUTED     = "#6B7280";
-const FG        = "#E2E8F0";
-const isWeb     = Platform.OS === "web";
-// ──────────────────────────────────────────────────────────────────────────────
+const isWeb = Platform.OS === "web";
 
 function webHover(setFn: (v: boolean) => void) {
   if (!isWeb) return {};
@@ -39,13 +26,14 @@ function webHover(setFn: (v: boolean) => void) {
 
 function SubjectIconCell({ icon, color }: { icon: string; color: string }) {
   if (/^[a-z][a-z0-9-]*$/.test(icon)) {
-    return <Ionicons name={icon as any} size={22} color={color} />;
+    return <Ionicons name={icon as any} size={20} color={color} />;
   }
-  return <Text style={{ fontSize: 20 }}>{icon}</Text>;
+  return <Text style={{ fontSize: 18 }}>{icon}</Text>;
 }
 
 // ─── Feature card ─────────────────────────────────────────────────────────────
 function FeatCard({ icon, label, color }: { icon: string; label: string; color: string }) {
+  const colors = useColors();
   const [hov, setHov] = useState(false);
   return (
     <TouchableOpacity
@@ -53,29 +41,44 @@ function FeatCard({ icon, label, color }: { icon: string; label: string; color: 
       {...(webHover(setHov) as any)}
       style={[
         s.featCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: hov ? colors.accent : colors.border,
+        },
         isWeb ? {
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
-          backgroundColor: hov ? GLASS_HOV : GLASS,
-          borderColor: hov ? "rgba(139,92,246,0.22)" : BORDER,
           boxShadow: hov
-            ? "0 0 18px rgba(139,92,246,0.18), 0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)"
-            : "0 2px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)",
-          transition: "all 0.25s ease",
-        } as any : { backgroundColor: GLASS, borderColor: BORDER },
+            ? "0 4px 14px rgba(184,147,90,0.12), inset 0 1px 0 rgba(255,255,255,0.05)"
+            : "0 2px 8px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.02)",
+          transition: "all 0.22s ease",
+        } as any : {},
       ]}
     >
-      <View style={[s.featIcon, { backgroundColor: color + "18" }]}>
-        <Feather name={icon as any} size={20} color={color} />
+      <View style={[s.featIcon, { backgroundColor: color + "12" }]}>
+        <Feather name={icon as any} size={18} color={color} />
       </View>
-      <Text style={[s.featLabel, { color: hov ? PURPLE_LIT : FG }]}>{label}</Text>
+      <Text style={[
+        s.featLabel,
+        {
+          color: colors.text,
+          fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+        }
+      ]}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
 
-// ─── Subject row ──────────────────────────────────────────────────────────────
+// ─── Subject card (Library ticket layout) ──────────────────────────────────────
 function SubjectRow({ sub }: { sub: any }) {
+  const colors = useColors();
   const [hov, setHov] = useState(false);
+  
+  // Left border color strip: use Oxblood for CSE, Gold for EEE, or standard sub.color
+  const borderStripColor = sub.college === "CSE" ? "#9B3131" : "#B8935A";
+
   return (
     <TouchableOpacity
       onPress={() => router.push(`/subject/${sub.id}`)}
@@ -83,37 +86,55 @@ function SubjectRow({ sub }: { sub: any }) {
       {...(webHover(setHov) as any)}
       style={[
         s.subjectRow,
+        {
+          backgroundColor: colors.card,
+          borderColor: hov ? colors.accent : colors.border,
+          borderLeftColor: borderStripColor,
+        },
         isWeb ? {
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
-          backgroundColor: hov ? GLASS_HOV : GLASS,
-          borderColor: hov ? "rgba(139,92,246,0.22)" : BORDER,
           boxShadow: hov
-            ? "0 0 14px rgba(139,92,246,0.15), 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
-            : "0 2px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04)",
-          transition: "all 0.25s ease",
-        } as any : { backgroundColor: GLASS, borderColor: BORDER },
+            ? "0 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(184,147,90,0.2)"
+            : "0 1px 4px rgba(0,0,0,0.02)",
+          transition: "all 0.22s ease",
+        } as any : {},
       ]}
     >
-      <View style={[s.subjectIcon, { backgroundColor: sub.color + "18" }]}>
+      <View style={[s.subjectIcon, { backgroundColor: sub.color + "12" }]}>
         <SubjectIconCell icon={sub.icon} color={sub.color} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={[s.subjectName, { color: hov ? PURPLE_LIT : FG }]}>{sub.name}</Text>
-        <Text style={[s.subjectMeta, { color: MUTED }]}>
+        <Text style={[
+          s.subjectName,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "700" as any,
+          }
+        ]}>
+          {sub.name}
+        </Text>
+        <Text style={[
+          s.subjectMeta,
+          {
+            color: colors.mutedForeground,
+            fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System",
+          }
+        ]}>
           {sub.code} · Sem {sub.semester} · {sub.chapterCount} chapters
         </Text>
       </View>
-      <Feather name="chevron-right" size={16} color={hov ? PURPLE_TXT : MUTED} />
+      <Feather name="chevron-right" size={16} color={colors.accent} />
     </TouchableOpacity>
   );
 }
 
-// ─── Main screen ──────────────────────────────────────────────────────────────
+// ─── Home Screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const colors    = useColors();
   const insets    = useSafeAreaInsets();
-  const { selectedCollege } = useApp();
+  const { selectedCollege, isDark, toggleTheme } = useApp();
   const isDesktop = useIsDesktop();
   const topPad    = isDesktop ? 0 : Platform.OS === "web" ? 67 : insets.top;
 
@@ -125,21 +146,18 @@ export default function HomeScreen() {
   const recent  = subjects.slice(0, 3);
 
   const features = [
-    { icon: "search",  label: "Search Notes", color: PURPLE },
-    { icon: "archive", label: "PYQs",         color: "#7C3AED" },
+    { icon: "search",  label: "Search Notes", color: colors.accent },
+    { icon: "archive", label: "PYQs",         color: colors.destructive },
   ] as const;
 
   return (
-    <View style={[s.wrapper, { backgroundColor: BG }]}>
-      {/* Interactive dot grid — fixed behind scrollable content */}
-      {isDesktop && <DotGrid />}
-
+    <View style={[s.wrapper, { backgroundColor: colors.background }]}>
       <ScrollView
         style={s.root}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Glass header card ──────────────────────────────────────────── */}
+        {/* ── Library Ticket Header Card ──────────────────────────────────── */}
         <View style={[
           s.header,
           { paddingTop: topPad + 24, paddingHorizontal: isDesktop ? 40 : 20 },
@@ -147,32 +165,79 @@ export default function HomeScreen() {
         ]}>
           <View style={[
             s.headerCard,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+            },
             isWeb ? {
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              backgroundColor: "rgba(139,92,246,0.09)",
-              borderColor: "rgba(139,92,246,0.18)",
-              boxShadow: "0 0 40px rgba(139,92,246,0.12), 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)",
-            } as any : { backgroundColor: "rgba(139,92,246,0.10)", borderColor: "rgba(139,92,246,0.20)" },
+              boxShadow: "0 10px 30px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.02)",
+            } as any : {},
           ]}>
-            <View style={s.headerTop}>
-              <View style={{ gap: 4 }}>
-                <Text style={s.greeting}>Welcome back!</Text>
-                <Text style={s.collegeName}>{college.name}</Text>
-                <Text style={s.collegeStream}>{college.fullName}</Text>
+            {/* Perforated top bar styling */}
+            <View style={[s.headerTop, { borderBottomWidth: 1, borderBottomColor: colors.border, pb: 16 } as any]}>
+              <View style={{ gap: 4, flex: 1 }}>
+                <Text style={[s.greeting, { color: colors.mutedForeground }]}>Student Member Access</Text>
+                <Text style={[
+                  s.collegeName,
+                  {
+                    color: colors.text,
+                    fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+                  }
+                ]}>
+                  {college.name}
+                </Text>
+                <Text style={[
+                  s.collegeStream,
+                  {
+                    color: colors.accent,
+                    fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+                  }
+                ]}>
+                  {college.fullName}
+                </Text>
               </View>
-              <View style={[
-                s.avatarCircle,
-                isWeb ? { boxShadow: "0 0 18px rgba(139,92,246,0.30)" } as any : {},
-              ]}>
-                <Feather name="book-open" size={22} color={PURPLE_TXT} />
+
+              <View style={{ alignItems: "flex-end", gap: 10 }}>
+                {/* Book Crest/Avatar */}
+                <View style={[
+                  s.avatarCircle,
+                  {
+                    backgroundColor: colors.secondary,
+                    borderColor: colors.border,
+                  }
+                ]}>
+                  <Feather name="book-open" size={20} color={colors.accent} />
+                </View>
+
+                {/* Mobile-only theme toggle */}
+                {!isDesktop && (
+                  <TouchableOpacity
+                    onPress={toggleTheme}
+                    style={[
+                      s.mobileToggle,
+                      { backgroundColor: colors.secondary, borderColor: colors.border }
+                    ]}
+                  >
+                    <Feather name={isDark ? "sun" : "moon"} size={13} color={colors.text} />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
-            <View style={s.pillRow}>
-              <View style={s.pill}>
-                <Feather name="layers" size={12} color={PURPLE_TXT} />
-                <Text style={s.pillText}>{subjects.length} Subjects</Text>
+
+            {/* Header bottom details */}
+            <View style={[s.pillRow, { paddingTop: 14 }]}>
+              <View style={[s.pill, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                <Feather name="layers" size={12} color={colors.accent} />
+                <Text style={[s.pillText, { color: colors.text }]}>{subjects.length} Subjects Shelf</Text>
               </View>
+              {isDark ? (
+                <View style={[s.pill, { backgroundColor: "rgba(184,147,90,0.12)", borderColor: "rgba(184,147,90,0.25)" }]}>
+                  <Feather name="moon" size={11} color={colors.accent} />
+                  <Text style={[s.pillText, { color: colors.accent }]}>Midnight Library</Text>
+                </View>
+              ) : null}
             </View>
           </View>
         </View>
@@ -184,44 +249,47 @@ export default function HomeScreen() {
         ]}>
 
           {/* Section: Features */}
-          <Text style={s.sectionTitle}>Features</Text>
+          <Text style={[
+            s.sectionTitle,
+            {
+              color: colors.text,
+              fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            }
+          ]}>
+            Features
+          </Text>
           <View style={s.featGrid}>
             {features.map((f) => (
               <FeatCard key={f.label} icon={f.icon} label={f.label} color={f.color} />
             ))}
           </View>
 
-          {/* Ambient glow behind subjects */}
-          {isDesktop && isWeb && React.createElement("div", {
-            style: {
-              position: "absolute",
-              width: "500px", height: "300px",
-              borderRadius: "50%",
-              background: "radial-gradient(ellipse, rgba(139,92,246,0.09) 0%, transparent 70%)",
-              top: "60%", left: "50%",
-              transform: "translateX(-50%)",
-              pointerEvents: "none",
-            },
-          } as any)}
-
           {/* Section: Subjects */}
-          <Text style={[s.sectionTitle, { marginTop: 8 }]}>Your Subjects</Text>
+          <Text style={[
+            s.sectionTitle,
+            {
+              color: colors.text,
+              fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+              marginTop: 18,
+            }
+          ]}>
+            Your Subjects Shelf
+          </Text>
 
           {loading ? (
             <View style={s.loadingRow}>
-              <ActivityIndicator color={PURPLE} />
+              <ActivityIndicator color={colors.accent} />
             </View>
           ) : recent.length === 0 ? (
             <View style={[
               s.emptyCard,
-              isWeb ? {
-                backdropFilter: "blur(14px)",
-                WebkitBackdropFilter: "blur(14px)",
-                backgroundColor: GLASS, borderColor: BORDER,
-              } as any : { backgroundColor: GLASS, borderColor: BORDER },
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              }
             ]}>
-              <Feather name="book" size={28} color={MUTED} />
-              <Text style={[s.emptyText, { color: MUTED }]}>No subjects yet</Text>
+              <Feather name="book" size={24} color={colors.mutedForeground} />
+              <Text style={[s.emptyText, { color: colors.mutedForeground }]}>No subjects shelf found</Text>
             </View>
           ) : (
             recent.map((sub) => <SubjectRow key={sub.id} sub={sub} />)
@@ -232,18 +300,22 @@ export default function HomeScreen() {
               onPress={() => router.push("/(tabs)/library")}
               style={[
                 s.viewAllBtn,
-                isWeb ? {
-                  backdropFilter: "blur(14px)",
-                  WebkitBackdropFilter: "blur(14px)",
-                  backgroundColor: GLASS, borderColor: "rgba(139,92,246,0.18)",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
-                } as any : { backgroundColor: GLASS, borderColor: BORDER },
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                }
               ]}
             >
-              <Text style={[s.viewAllText, { color: PURPLE_TXT }]}>
-                View all {subjects.length} subjects
+              <Text style={[
+                s.viewAllText,
+                {
+                  color: colors.accent,
+                  fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+                }
+              ]}>
+                View all {subjects.length} subjects shelf
               </Text>
-              <Feather name="arrow-right" size={14} color={PURPLE_TXT} />
+              <Feather name="arrow-right" size={14} color={colors.accent} />
             </TouchableOpacity>
           )}
         </View>
@@ -252,73 +324,33 @@ export default function HomeScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  wrapper:  { flex: 1 },
-  root:     { flex: 1, backgroundColor: "transparent" },
-
-  header:   { paddingBottom: 0 },
-  headerCard: {
-    borderRadius: 22, borderWidth: 1,
-    padding: 20, marginBottom: 0,
-  },
-  headerTop: {
-    flexDirection: "row", alignItems: "flex-start",
-    justifyContent: "space-between", marginBottom: 16,
-  },
-  greeting:     { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular" },
-  collegeName:  { color: FG, fontSize: 22, fontFamily: "Inter_700Bold" },
-  collegeStream:{ color: PURPLE_TXT, fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
-  avatarCircle: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: "rgba(139,92,246,0.14)",
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: "rgba(139,92,246,0.25)",
-  },
-  pillRow: { flexDirection: "row", gap: 8 },
-  pill: {
-    flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "rgba(139,92,246,0.12)",
-    borderWidth: 1, borderColor: "rgba(139,92,246,0.20)",
-    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5,
-  },
-  pillText: { color: PURPLE_TXT, fontSize: 12, fontFamily: "Inter_600SemiBold" },
-
+  wrapper:      { flex: 1 },
+  root:         { flex: 1, backgroundColor: "transparent" },
+  header:       { paddingBottom: 0 },
+  headerCard:   { borderRadius: 10, borderWidth: 1, padding: 20 },
+  headerTop:    { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", paddingBottom: 14 },
+  greeting:     { fontSize: 10, letterSpacing: 1, textTransform: "uppercase", fontFamily: "System", fontWeight: "600" },
+  collegeName:  { fontSize: 24, fontWeight: "700", marginTop: 4 },
+  collegeStream:{ fontSize: 13, fontWeight: "500", marginTop: 2 },
+  avatarCircle: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", borderWidth: 1 },
+  mobileToggle: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, marginTop: 4 },
+  pillRow:      { flexDirection: "row", gap: 8 },
+  pill:         { flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1 },
+  pillText:     { fontSize: 11, fontWeight: "600" },
   body:         { padding: 20, gap: 12 },
-  sectionTitle: { color: FG, fontSize: 17, fontFamily: "Inter_700Bold", marginTop: 4 },
-
-  featGrid: { flexDirection: "row", gap: 12 },
-  featCard: {
-    flex: 1, borderRadius: 18, borderWidth: 1,
-    padding: 18, alignItems: "center", gap: 10,
-  },
-  featIcon: {
-    width: 46, height: 46, borderRadius: 14,
-    alignItems: "center", justifyContent: "center",
-  },
-  featLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold", textAlign: "center" },
-
-  subjectRow: {
-    flexDirection: "row", alignItems: "center",
-    borderRadius: 18, borderWidth: 1, padding: 16, gap: 14,
-  },
-  subjectIcon: {
-    width: 46, height: 46, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", flexShrink: 0,
-  },
-  subjectName: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 3 },
-  subjectMeta: { fontSize: 12, fontFamily: "Inter_400Regular" },
-
-  loadingRow: { paddingVertical: 28, alignItems: "center" },
-  emptyCard: {
-    borderRadius: 18, borderWidth: 1,
-    padding: 36, alignItems: "center", gap: 12,
-  },
-  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular" },
-
-  viewAllBtn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 6, borderRadius: 14, borderWidth: 1, paddingVertical: 14,
-  },
-  viewAllText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginTop: 8 },
+  featGrid:     { flexDirection: "row", gap: 12 },
+  featCard:     { flex: 1, borderRadius: 10, borderWidth: 1, padding: 16, alignItems: "center", gap: 10 },
+  featIcon:     { width: 42, height: 42, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  featLabel:    { fontSize: 13, fontWeight: "600", textAlign: "center" },
+  subjectRow:   { flexDirection: "row", alignItems: "center", borderRadius: 10, borderWidth: 1, borderLeftWidth: 4, padding: 16, gap: 14 },
+  subjectIcon:  { width: 40, height: 40, borderRadius: 8, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  subjectName:  { fontSize: 15, marginBottom: 2 },
+  subjectMeta:  { fontSize: 11 },
+  loadingRow:   { paddingVertical: 28, alignItems: "center" },
+  emptyCard:    { borderRadius: 10, borderWidth: 1, padding: 36, alignItems: "center", gap: 12 },
+  emptyText:    { fontSize: 13 },
+  viewAllBtn:   { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10, borderWidth: 1, paddingVertical: 14 },
+  viewAllText:  { fontSize: 13, fontWeight: "600" },
 });

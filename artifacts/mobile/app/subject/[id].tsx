@@ -14,20 +14,9 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useApiSubject } from "@/hooks/useApiSubject";
 import { ParticleMesh } from "@/components/ParticleMesh";
+import { useColors } from "@/hooks/useColors";
 
 const isWeb = Platform.OS === "web";
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const BG       = "#080B1A";
-const CARD     = "rgba(15,18,40,0.85)";
-const CARD_HOV = "rgba(22,26,56,0.95)";
-const BORDER   = "rgba(124,92,252,0.18)";
-const BORDER_H = "rgba(124,92,252,0.50)";
-const PURPLE   = "#7C5CFC";
-const PURPLE_TXT = "#A78BFA";
-const MUTED    = "#6B7280";
-const FG       = "#E2E8F0";
-// ─────────────────────────────────────────────────────────────────────────────
 
 function webHover(setFn: (v: boolean) => void) {
   if (!isWeb) return {};
@@ -36,6 +25,7 @@ function webHover(setFn: (v: boolean) => void) {
 
 export default function SubjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const topPad = isWeb ? 67 : insets.top;
 
@@ -43,100 +33,111 @@ export default function SubjectScreen() {
 
   if (loading) {
     return (
-      <View style={[s.root, { backgroundColor: BG, justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={PURPLE} size="large" />
+      <View style={[s.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
   if (!subject) {
     return (
-      <View style={[s.root, { backgroundColor: BG, justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: FG }}>Subject not found</Text>
+      <View style={[s.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: colors.text }}>Subject shelf not found</Text>
       </View>
     );
   }
 
+  // Left indicator strip color
+  const borderStripColor = subject.college === "CSE" ? "#9B3131" : "#B8935A";
+
   return (
-    <View style={[s.root, { backgroundColor: BG }]}>
-      {/* Ambient particle background */}
+    <View style={[s.root, { backgroundColor: colors.background }]}>
       <ParticleMesh />
 
-      {/* Hero header — glass panel with subject color accent */}
+      {/* Hero header */}
       <View
         style={[
           s.header,
-          { paddingTop: topPad + 12 },
+          {
+            paddingTop: topPad + 12,
+            backgroundColor: colors.card,
+            borderBottomColor: colors.border,
+          },
           isWeb ? {
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            backgroundColor: "rgba(8,11,26,0.82)",
-            borderBottomColor: subject.color + "40",
-            boxShadow: `0 1px 0 ${subject.color}25, 0 4px 32px rgba(0,0,0,0.5)`,
-          } as any : {
-            backgroundColor: "rgba(12,14,32,0.95)",
-            borderBottomColor: subject.color + "40",
-          },
+            boxShadow: `0 1px 0 rgba(184,147,90,0.06), 0 4px 24px rgba(0,0,0,0.04)`,
+          } as any : {},
         ]}
       >
-        {/* Accent glow bar at top */}
-        {isWeb && React.createElement("div", {
-          style: {
-            position: "absolute", top: 0, left: 0, right: 0, height: "2px",
-            background: `linear-gradient(90deg, transparent, ${subject.color}90, ${subject.color}, ${subject.color}90, transparent)`,
-            pointerEvents: "none",
-          },
-        } as any)}
+        <View style={s.headerInner}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[
+              s.backBtn,
+              { backgroundColor: colors.secondary, borderColor: colors.border },
+            ]}
+          >
+            <Feather name="arrow-left" size={18} color={colors.text} />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={[
-            s.backBtn,
-            isWeb ? {
-              backdropFilter: "blur(12px)",
-              backgroundColor: "rgba(255,255,255,0.06)",
-              borderColor: BORDER,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            } as any : { backgroundColor: "rgba(255,255,255,0.08)", borderColor: BORDER },
-          ]}
-        >
-          <Feather name="arrow-left" size={18} color={FG} />
-        </TouchableOpacity>
-
-        <View style={s.subjectInfo}>
-          <View style={[
-            s.iconWrap,
-            { backgroundColor: subject.color + "18", borderColor: subject.color + "40" },
-            isWeb ? { boxShadow: `0 0 20px ${subject.color}30` } as any : {},
-          ]}>
-            <Ionicons name={subject.icon as any} size={28} color={subject.color} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.subjectName}>{subject.name}</Text>
-            <Text style={[s.subjectCode, { color: subject.color }]}>
-              {subject.code} · Semester {subject.semester}
-            </Text>
-            <Text style={s.subjectDesc} numberOfLines={2}>{subject.description}</Text>
-          </View>
-        </View>
-
-        <View style={s.metaRow}>
-          {[
-            { icon: "book", label: `${subject.chapters.length} Chapters` },
-            { icon: "credit-card", label: "Flashcards" },
-            { icon: "check-square", label: "Quizzes" },
-          ].map((m) => (
-            <View
-              key={m.label}
-              style={[
-                s.metaPill,
-                { backgroundColor: subject.color + "15", borderColor: subject.color + "35" },
-              ]}
-            >
-              <Feather name={m.icon as any} size={11} color={subject.color} />
-              <Text style={[s.metaText, { color: subject.color }]}>{m.label}</Text>
+          <View style={s.subjectInfo}>
+            <View style={[
+              s.iconWrap,
+              { backgroundColor: subject.color + "12", borderColor: subject.color + "30" },
+            ]}>
+              <Ionicons name={subject.icon as any} size={28} color={subject.color} />
             </View>
-          ))}
+            <View style={{ flex: 1 }}>
+              <Text style={[
+                s.subjectName,
+                {
+                  color: colors.text,
+                  fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+                  fontWeight: "700" as any,
+                }
+              ]}>
+                {subject.name}
+              </Text>
+              <Text style={[
+                s.subjectCode,
+                {
+                  color: colors.accent,
+                  fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System",
+                }
+              ]}>
+                {subject.code} · Semester {subject.semester}
+              </Text>
+              <Text style={[
+                s.subjectDesc,
+                {
+                  color: colors.mutedForeground,
+                  fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+                }
+              ]} numberOfLines={2}>
+                {subject.description}
+              </Text>
+            </View>
+          </View>
+
+          <View style={s.metaRow}>
+            {[
+              { icon: "book", label: `${subject.chapters.length} Chapters` },
+              { icon: "credit-card", label: "Flashcards" },
+              { icon: "check-square", label: "Quizzes" },
+            ].map((m) => (
+              <View
+                key={m.label}
+                style={[
+                  s.metaPill,
+                  { backgroundColor: colors.secondary, borderColor: colors.border },
+                ]}
+              >
+                <Feather name={m.icon as any} size={11} color={colors.accent} />
+                <Text style={[s.metaText, { color: colors.text, fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System" }]}>{m.label}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -145,14 +146,23 @@ export default function SubjectScreen() {
         contentContainerStyle={[s.body, { paddingBottom: 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={s.sectionTitle}>Chapters</Text>
+        <Text style={[
+          s.sectionTitle,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "700" as any,
+          }
+        ]}>
+          Chapters Directory
+        </Text>
         {subject.chapters.map((chapter, i) => (
           <ChapterCard
             key={chapter.id}
             chapter={chapter}
             index={i}
             subjectId={subject.id}
-            accentColor={subject.color}
+            borderStripColor={borderStripColor}
           />
         ))}
       </ScrollView>
@@ -161,10 +171,11 @@ export default function SubjectScreen() {
 }
 
 function ChapterCard({
-  chapter, index, subjectId, accentColor,
+  chapter, index, subjectId, borderStripColor,
 }: {
-  chapter: any; index: number; subjectId: string; accentColor: string;
+  chapter: any; index: number; subjectId: string; borderStripColor: string;
 }) {
+  const colors = useColors();
   const [hov, setHov] = useState(false);
   return (
     <TouchableOpacity
@@ -176,32 +187,41 @@ function ChapterCard({
       {...(webHover(setHov) as any)}
       style={[
         s.chapterCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: hov ? colors.accent : colors.border,
+          borderLeftColor: borderStripColor,
+        },
         isWeb ? {
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
-          backgroundColor: hov ? CARD_HOV : CARD,
-          borderColor: hov ? accentColor + "50" : BORDER,
           boxShadow: hov
-            ? `0 0 0 1px ${accentColor}40, 0 4px 20px rgba(124,92,252,0.15), inset 0 1px 0 rgba(255,255,255,0.04)`
-            : "0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
+            ? `0 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(184,147,90,0.2)`
+            : "0 1px 4px rgba(0,0,0,0.02)",
           transition: "all 0.22s ease",
-        } as any : { backgroundColor: CARD, borderColor: BORDER },
+        } as any : {},
       ]}
     >
       <View style={[
         s.chapterNum,
-        { backgroundColor: accentColor + "15", borderColor: accentColor + "35" },
-        isWeb && hov ? { boxShadow: `0 0 12px ${accentColor}40` } as any : {},
+        { backgroundColor: colors.secondary, borderColor: colors.border },
       ]}>
-        <Text style={[s.chapterNumText, { color: accentColor }]}>{index + 1}</Text>
+        <Text style={[s.chapterNumText, { color: colors.text, fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System" }]}>{index + 1}</Text>
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={s.chapterTitle}>{chapter.title}</Text>
+        <Text style={[
+          s.chapterTitle,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "600" as any,
+          }
+        ]}>{chapter.title}</Text>
       </View>
       <Feather
         name="chevron-right"
         size={16}
-        color={hov ? PURPLE_TXT : MUTED}
+        color={colors.accent}
       />
     </TouchableOpacity>
   );
@@ -213,8 +233,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 20,
     borderBottomWidth: 1, position: "relative" as any,
   },
+  headerInner: { maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
   backBtn: {
-    width: 38, height: 38, borderRadius: 10,
+    width: 36, height: 36, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     marginBottom: 16, borderWidth: 1,
   },
@@ -222,39 +243,31 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "flex-start", gap: 14, marginBottom: 14,
   },
   iconWrap: {
-    width: 58, height: 58, borderRadius: 16,
+    width: 58, height: 58, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
     flexShrink: 0, borderWidth: 1,
   },
-  subjectName: {
-    color: FG, fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 4,
-  },
-  subjectCode: {
-    fontSize: 12, fontFamily: "Inter_600SemiBold", marginBottom: 4,
-  },
-  subjectDesc: {
-    color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18,
-  },
+  subjectName: { fontSize: 20, marginBottom: 4 },
+  subjectCode: { fontSize: 12, marginBottom: 4 },
+  subjectDesc: { fontSize: 13, lineHeight: 18 },
   metaRow: { flexDirection: "row", gap: 8 },
   metaPill: {
     flexDirection: "row", alignItems: "center", gap: 5,
     borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
     borderWidth: 1,
   },
-  metaText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+  metaText: { fontSize: 11, fontWeight: "600" },
   body: { padding: 16, gap: 10, maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
-  sectionTitle: {
-    fontSize: 18, fontFamily: "Inter_700Bold", color: FG, marginBottom: 4, marginTop: 4,
-  },
+  sectionTitle: { fontSize: 18, marginBottom: 4, marginTop: 4 },
   chapterCard: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 14, borderWidth: 1, padding: 14, gap: 12,
+    borderRadius: 10, borderWidth: 1, borderLeftWidth: 4, padding: 14, gap: 12,
   },
   chapterNum: {
-    width: 42, height: 42, borderRadius: 12,
+    width: 40, height: 40, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     flexShrink: 0, borderWidth: 1,
   },
-  chapterNumText: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  chapterTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold", color: FG },
+  chapterNumText: { fontSize: 15, fontWeight: "700" },
+  chapterTitle: { fontSize: 15 },
 });

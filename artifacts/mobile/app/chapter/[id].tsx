@@ -12,16 +12,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useApiSubject } from "@/hooks/useApiSubject";
 import { useApiChapter } from "@/hooks/useApiChapter";
+import { useColors } from "@/hooks/useColors";
 
 const isWeb = Platform.OS === "web";
-
-// ── Design tokens ─────────────────────────────────────────────────────────
-const BG         = "#080B1A";
-const BORDER     = "rgba(124,92,252,0.18)";
-const PURPLE     = "#7C5CFC";
-const MUTED      = "#6B7280";
-const FG         = "#E2E8F0";
-// ─────────────────────────────────────────────────────────────────────────
 
 function HtmlViewer({ html, background }: { html: string; background: string }) {
   if (isWeb) {
@@ -57,70 +50,86 @@ function HtmlViewer({ html, background }: { html: string; background: string }) 
 
 export default function ChapterScreen() {
   const { id, subjectId } = useLocalSearchParams<{ id: string; subjectId: string }>();
+  const colors = useColors();
   const insets  = useSafeAreaInsets();
   const topPad  = isWeb ? 67 : insets.top;
 
   const { subject } = useApiSubject(subjectId);
   const { chapter, loading } = useApiChapter(subjectId, id);
 
-  const subjectColor = subject?.color ?? PURPLE;
+  const subjectColor = subject?.color ?? colors.accent;
   const subjectName  = subject?.name ?? "";
 
   if (loading) {
     return (
-      <View style={[s.root, { backgroundColor: BG, justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={PURPLE} size="large" />
+      <View style={[s.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
   if (!chapter) {
     return (
-      <View style={[s.root, { backgroundColor: BG, justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: FG }}>Chapter not found</Text>
+      <View style={[s.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: colors.text }}>Chapter shelf not found</Text>
       </View>
     );
   }
 
+  const borderStripColor = subject?.college === "CSE" ? "#9B3131" : "#B8935A";
+
   const htmlContent = chapter.contentHtml
     ? chapter.contentHtml
-    : `<!DOCTYPE html><html><body style="display:flex;align-items:center;justify-content:center;min-height:80vh;font-family:sans-serif;color:#9ca3af;text-align:center;margin:0;"><div><div style="font-size:48px;margin-bottom:16px">📄</div><p style="font-size:16px">No notes uploaded yet</p></div></body></html>`;
+    : `<!DOCTYPE html><html><body style="display:flex;align-items:center;justify-content:center;min-height:80vh;font-family:sans-serif;color:#a79c82;text-align:center;margin:0;background-color:${colors.card}"><div><div style="font-size:48px;margin-bottom:16px">📄</div><p style="font-size:16px">No notes uploaded to this chapter shelf yet</p></div></body></html>`;
 
   return (
-    <View style={[s.root, { backgroundColor: BG }]}>
+    <View style={[s.root, { backgroundColor: colors.background }]}>
       {/* ── Header ───────────────────────────────────────────────── */}
       <View
         style={[
           s.header,
-          { paddingTop: topPad + 8, borderBottomColor: subjectColor + "40", borderLeftColor: subjectColor },
+          {
+            paddingTop: topPad + 8,
+            backgroundColor: colors.card,
+            borderBottomColor: colors.border,
+            borderLeftColor: borderStripColor,
+          },
           isWeb ? {
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            backgroundColor: "rgba(8,11,26,0.82)",
-            boxShadow: `0 1px 0 ${subjectColor}25`,
-          } as any : { backgroundColor: "rgba(12,14,32,0.96)" },
+            boxShadow: `0 1px 0 rgba(184,147,90,0.06)`,
+          } as any : {},
         ]}
       >
-        <View style={s.headerTop}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={[s.backBtn, { borderColor: BORDER, backgroundColor: "rgba(255,255,255,0.06)" }]}
-          >
-            <Feather name="arrow-left" size={18} color={FG} />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={[s.subjectLabel, { color: subjectColor }]} numberOfLines={1}>
-              {subjectName}
-            </Text>
-            <Text style={s.chapterTitle} numberOfLines={2}>
-              {chapter.title}
-            </Text>
+        <View style={s.headerInner}>
+          <View style={s.headerTop}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={[s.backBtn, { borderColor: colors.border, backgroundColor: colors.secondary }]}
+            >
+              <Feather name="arrow-left" size={18} color={colors.text} />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.subjectLabel, { color: colors.accent, fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System" }]} numberOfLines={1}>
+                {subjectName}
+              </Text>
+              <Text style={[
+                s.chapterTitle,
+                {
+                  color: colors.text,
+                  fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+                  fontWeight: "700" as any,
+                }
+              ]} numberOfLines={2}>
+                {chapter.title}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
 
       {/* ── HTML Notes Viewer ─────────────────────────────────────── */}
-      <HtmlViewer html={htmlContent} background={BG} />
+      <HtmlViewer html={htmlContent} background={colors.card} />
     </View>
   );
 }
@@ -128,23 +137,22 @@ export default function ChapterScreen() {
 const s = StyleSheet.create({
   root:   { flex: 1 },
   header: {
-    borderBottomWidth: 1, borderLeftWidth: 3,
+    borderBottomWidth: 1, borderLeftWidth: 4,
     paddingBottom: 12, position: "relative" as any,
   },
+  headerInner: { maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
   headerTop: {
     flexDirection: "row", alignItems: "flex-start",
     gap: 12, paddingHorizontal: 16, paddingTop: 8,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 10,
+    width: 36, height: 36, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     marginTop: 2, borderWidth: 1,
   },
   subjectLabel: {
-    fontSize: 11, fontFamily: "Inter_700Bold",
+    fontSize: 11,
     letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2,
   },
-  chapterTitle: {
-    color: FG, fontSize: 17, fontFamily: "Inter_700Bold", lineHeight: 23,
-  },
+  chapterTitle: { fontSize: 17, lineHeight: 23 },
 });

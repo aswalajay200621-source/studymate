@@ -20,28 +20,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/AuthContext";
 import { COLLEGES } from "@/data/content";
-import { WaveFlow } from "@/components/WaveFlow";
+import { useColors } from "@/hooks/useColors";
 
 const isWeb = Platform.OS === "web";
 
 const YEAR_LABELS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 const YEAR_VALUES = ["1", "2", "3", "4"];
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const BG        = "#080B1A";
-const CARD      = "rgba(15,18,40,0.88)";
-const CARD_HOV  = "rgba(22,26,56,0.95)";
-const BORDER    = "rgba(124,92,252,0.18)";
-const BORDER_H  = "rgba(124,92,252,0.45)";
-const PURPLE    = "#7C5CFC";
-const PURPLE_DIM = "rgba(124,92,252,0.15)";
-const PURPLE_TXT = "#A78BFA";
-const PURPLE_LIT = "#C4B5FD";
-const MUTED     = "#6B7280";
-const FG        = "#E2E8F0";
-const DANGER    = "#F87171";
-const DANGER_DIM = "rgba(248,113,113,0.12)";
-// ─────────────────────────────────────────────────────────────────────────────
 
 function webHover(setFn: (v: boolean) => void) {
   if (!isWeb) return {};
@@ -50,6 +34,7 @@ function webHover(setFn: (v: boolean) => void) {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { selectedCollege, isSubscribed, isDark, toggleTheme, resetCollege } = useApp();
   const { user, logout, isAdmin, updateProfile } = useAuth();
   const topPad = isWeb ? 67 : insets.top;
@@ -96,8 +81,8 @@ export default function ProfileScreen() {
       return;
     }
     Alert.alert(
-      "Change College",
-      "Are you sure you want to switch your college? Your progress will be reset.",
+      "Change College Shelf",
+      "Are you sure you want to switch your college shelf? Your progress will be reset.",
       [
         { text: "Cancel", style: "cancel" },
         { text: "Switch", style: "destructive",
@@ -119,61 +104,74 @@ export default function ProfileScreen() {
   const yearLabel = YEAR_LABELS[YEAR_VALUES.indexOf(user?.year ?? "1")] ?? "1st Year";
 
   const menuItems = [
-    { icon: "moon" as const,      label: isDark ? "Dark Mode" : "Light Mode", toggle: true },
+    { icon: "moon" as const,      label: isDark ? "Midnight Mode" : "Light Mode", toggle: true },
     { icon: "edit-2" as const,    label: "Edit Profile",    onPress: openEdit },
-    { icon: "book-open" as const, label: "My Subjects",     onPress: () => router.push("/(tabs)/library") },
-    { icon: "refresh-cw" as const,label: "Change College",  onPress: handleChangeCollege },
+    { icon: "book-open" as const, label: "My Subjects Shelf", onPress: () => router.push("/(tabs)/library") },
+    { icon: "refresh-cw" as const,label: "Change College Shelf", onPress: handleChangeCollege },
     ...(isAdmin ? [{ icon: "shield" as const, label: "Admin Panel", onPress: () => router.push("/(admin)"), admin: true }] : []),
-    { icon: "log-out" as const,   label: "Log Out",         onPress: handleLogout, danger: true },
+    { icon: "log-out" as const,   label: "Log Out Account",   onPress: handleLogout, danger: true },
   ];
 
   return (
     <>
-      <View style={[s.root, { backgroundColor: BG }]}>
+      <View style={[s.root, { backgroundColor: colors.background }]}>
 
-        {/* ── Profile hero with WaveFlow ──────────────────────────── */}
-        <View style={[s.heroWrap, { paddingTop: topPad + 16 }]}>
-          <WaveFlow />
-          {/* Gradient overlay to blend into BG */}
-          {isWeb && React.createElement("div", {
-            style: {
-              position: "absolute", bottom: 0, left: 0, right: 0,
-              height: "40%",
-              background: `linear-gradient(to bottom, transparent, ${BG})`,
-              pointerEvents: "none",
-            },
-          } as any)}
-
+        {/* ── Profile hero header ── */}
+        <View style={[s.heroWrap, { paddingTop: topPad + 32, borderBottomColor: colors.border, borderBottomWidth: 1, backgroundColor: colors.card }]}>
           <TouchableOpacity onPress={openEdit} style={s.avatar} activeOpacity={0.8}>
-            <View style={[s.avatarInner, isWeb ? {
-              boxShadow: "0 0 0 2px rgba(124,92,252,0.5), 0 0 28px rgba(124,92,252,0.35)",
-            } as any : {}]}>
-              <Text style={s.avatarInitial}>
+            <View style={[
+              s.avatarInner,
+              {
+                backgroundColor: colors.secondary,
+                borderColor: colors.border,
+                borderWidth: 1.5,
+              },
+              isWeb ? {
+                boxShadow: "0 0 16px rgba(184,147,90,0.12)",
+              } as any : {}
+            ]}>
+              <Text style={[s.avatarInitial, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>
                 {user?.name?.charAt(0)?.toUpperCase() ?? "?"}
               </Text>
             </View>
-            <View style={[s.editBadge, { backgroundColor: PURPLE }]}>
+            <View style={[s.editBadge, { backgroundColor: colors.accent }]}>
               <Feather name="edit-2" size={10} color="#fff" />
             </View>
           </TouchableOpacity>
 
-          <Text style={s.userName}>{user?.name ?? "Student"}</Text>
-          <Text style={s.userEmail}>{user?.email ?? ""}</Text>
-          <Text style={s.collegeName}>{college.name} · {yearLabel}</Text>
+          <Text style={[
+            s.userName,
+            {
+              color: colors.text,
+              fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            }
+          ]}>
+            {user?.name ?? "Student"}
+          </Text>
+          <Text style={[
+            s.userEmail,
+            {
+              color: colors.mutedForeground,
+              fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System",
+            }
+          ]}>
+            {user?.email ?? ""}
+          </Text>
+          <Text style={[s.collegeNameText, { color: colors.mutedForeground }]}>{college.name} · {yearLabel}</Text>
 
           {isAdmin ? (
-            <View style={[s.badge, { backgroundColor: "rgba(124,92,252,0.25)", borderColor: BORDER_H }]}>
-              <Feather name="shield" size={12} color={PURPLE_LIT} />
-              <Text style={[s.badgeText, { color: PURPLE_LIT }]}>Admin</Text>
+            <View style={[s.badge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+              <Feather name="shield" size={12} color={colors.accent} />
+              <Text style={[s.badgeText, { color: colors.text }]}>Library Admin</Text>
             </View>
           ) : isSubscribed ? (
-            <View style={[s.badge, { backgroundColor: "rgba(251,191,36,0.18)", borderColor: "rgba(251,191,36,0.4)" }]}>
-              <Feather name="star" size={12} color="#FCD34D" />
-              <Text style={[s.badgeText, { color: "#FCD34D" }]}>Pro Member</Text>
+            <View style={[s.badge, { backgroundColor: "rgba(184,147,90,0.12)", borderColor: colors.border }]}>
+              <Feather name="star" size={12} color={colors.accent} />
+              <Text style={[s.badgeText, { color: colors.accent }]}>Pro Student Member</Text>
             </View>
           ) : (
-            <View style={[s.badge, { backgroundColor: PURPLE_DIM, borderColor: BORDER }]}>
-              <Text style={[s.badgeText, { color: PURPLE_TXT }]}>Student</Text>
+            <View style={[s.badge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+              <Text style={[s.badgeText, { color: colors.text }]}>Student Member</Text>
             </View>
           )}
         </View>
@@ -182,7 +180,7 @@ export default function ProfileScreen() {
           contentContainerStyle={{ paddingBottom: botPad + 100 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Menu grid (two-column on wide, single on narrow) ─── */}
+          {/* ── Menu list ─── */}
           <View style={s.body}>
             <View style={s.menuGrid}>
               {menuItems.map((item, i) => (
@@ -201,18 +199,18 @@ export default function ProfileScreen() {
         <View style={s.modalOverlay}>
           <View style={[
             s.modalBox,
+            { backgroundColor: colors.card, borderColor: colors.border },
             isWeb ? {
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              backgroundColor: "rgba(12,15,34,0.97)",
-              borderColor: BORDER,
-              boxShadow: "0 -4px 40px rgba(0,0,0,0.6)",
-            } as any : { backgroundColor: "#0F1228" },
+              maxWidth: 520, width: "100%" as any, alignSelf: "center" as any, borderRadius: 20, marginBottom: 40,
+              boxShadow: "0 -4px 40px rgba(0,0,0,0.05)",
+            } as any : {},
           ]}>
             <View style={s.modalHeader}>
-              <Text style={s.modalTitle}>Edit Profile</Text>
+              <Text style={[s.modalTitle, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>
+                Edit Member Profile
+              </Text>
               <TouchableOpacity onPress={() => setEditVisible(false)}>
-                <Feather name="x" size={22} color={MUTED} />
+                <Feather name="x" size={22} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
 
@@ -223,65 +221,65 @@ export default function ProfileScreen() {
                   { label: "Last Name",    value: editLast,  setter: setEditLast  },
                 ].map(({ label, value, setter }) => (
                   <View key={label} style={{ flex: 1 }}>
-                    <Text style={s.fieldLabel}>{label}</Text>
+                    <Text style={[s.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text>
                     <TextInput
-                      style={s.fieldInput}
+                      style={[s.fieldInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.input }]}
                       value={value}
                       onChangeText={setter}
                       placeholder={label.replace(" *", "")}
-                      placeholderTextColor={MUTED}
+                      placeholderTextColor={colors.mutedForeground}
                       autoCapitalize="words"
                     />
                   </View>
                 ))}
               </View>
 
-              <Text style={[s.fieldLabel, { marginTop: 12 }]}>College</Text>
+              <Text style={[s.fieldLabel, { color: colors.mutedForeground, marginTop: 16 }]}>College</Text>
               <View style={s.pillRow}>
                 {(["CSE", "EEE"] as const).map((c) => (
                   <TouchableOpacity key={c} onPress={() => setEditCollege(c)}
                     style={[s.pill, editCollege === c
-                      ? { borderColor: PURPLE, backgroundColor: PURPLE_DIM }
-                      : { borderColor: BORDER, backgroundColor: "transparent" }
+                      ? { borderColor: colors.accent, backgroundColor: colors.secondary }
+                      : { borderColor: colors.border, backgroundColor: "transparent" }
                     ]}
                   >
-                    <Text style={[s.pillText, { color: editCollege === c ? PURPLE_LIT : MUTED }]}>{c}</Text>
+                    <Text style={[s.pillText, { color: editCollege === c ? colors.text : colors.mutedForeground }]}>{c}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={[s.fieldLabel, { marginTop: 12 }]}>Year</Text>
+              <Text style={[s.fieldLabel, { color: colors.mutedForeground, marginTop: 16 }]}>Year</Text>
               <View style={s.pillRow}>
                 {YEAR_LABELS.map((label, i) => (
                   <TouchableOpacity key={label} onPress={() => setEditYear(YEAR_VALUES[i])}
                     style={[s.pill, editYear === YEAR_VALUES[i]
-                      ? { borderColor: PURPLE, backgroundColor: PURPLE_DIM }
-                      : { borderColor: BORDER, backgroundColor: "transparent" }
+                      ? { borderColor: colors.accent, backgroundColor: colors.secondary }
+                      : { borderColor: colors.border, backgroundColor: "transparent" }
                     ]}
                   >
-                    <Text style={[s.pillText, { color: editYear === YEAR_VALUES[i] ? PURPLE_LIT : MUTED, fontSize: 12 }]}>{label}</Text>
+                    <Text style={[s.pillText, { color: editYear === YEAR_VALUES[i] ? colors.text : colors.mutedForeground, fontSize: 12 }]}>{label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
               {!!editError && (
-                <View style={s.errorBox}>
-                  <Feather name="alert-circle" size={14} color={DANGER} />
-                  <Text style={s.errorText}>{editError}</Text>
+                <View style={[s.errorBox, { borderColor: colors.border }]}>
+                  <Feather name="alert-circle" size={14} color={colors.destructive} />
+                  <Text style={[s.errorText, { color: colors.destructive }]}>{editError}</Text>
                 </View>
               )}
 
               <TouchableOpacity onPress={handleSaveProfile} disabled={editSaving}
-                style={[s.saveBtn, { marginTop: 20 }]} activeOpacity={0.85}
+                style={[s.saveBtn, { marginTop: 24 }]} activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={["#6D28D9", "#7C5CFC"]}
+                  colors={[colors.primary, colors.tint]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={s.saveBtnGrad}
                 >
                   {editSaving
                     ? <ActivityIndicator color="#fff" />
-                    : <Text style={s.saveBtnText}>Save Changes</Text>
+                    : <Text style={[s.saveBtnText, { color: colors.primaryForeground }]}>Save Changes</Text>
                   }
                 </LinearGradient>
               </TouchableOpacity>
@@ -294,14 +292,15 @@ export default function ProfileScreen() {
 }
 
 function MenuItem({ item, isDark, toggleTheme }: { item: any; isDark: boolean; toggleTheme: () => void }) {
+  const colors = useColors();
   const [hov, setHov] = useState(false);
   const isToggle  = item.toggle === true;
   const isDanger  = item.danger === true;
   const isAdminIt = item.admin  === true;
 
-  const iconColor = isDanger ? DANGER : isAdminIt ? PURPLE_LIT : hov ? PURPLE_LIT : PURPLE_TXT;
-  const iconBg    = isDanger ? DANGER_DIM : isAdminIt ? PURPLE_DIM : PURPLE_DIM;
-  const labelColor = isDanger ? DANGER : isAdminIt ? PURPLE_LIT : FG;
+  const iconColor = isDanger ? colors.destructive : colors.accent;
+  const iconBg    = isDanger ? "rgba(155,49,49,0.08)" : colors.secondary;
+  const labelColor = isDanger ? colors.destructive : colors.text;
 
   return (
     <TouchableOpacity
@@ -310,47 +309,75 @@ function MenuItem({ item, isDark, toggleTheme }: { item: any; isDark: boolean; t
       {...(webHover(setHov) as any)}
       style={[
         s.menuItem,
+        {
+          backgroundColor: colors.card,
+          borderColor: hov ? colors.accent : colors.border,
+        },
         isWeb ? {
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
-          backgroundColor: hov ? CARD_HOV : CARD,
-          borderColor: hov ? (isDanger ? "rgba(248,113,113,0.35)" : BORDER_H) : BORDER,
           boxShadow: hov
-            ? "0 0 0 1px rgba(124,92,252,0.2), 0 4px 20px rgba(124,92,252,0.12)"
-            : "0 2px 10px rgba(0,0,0,0.25)",
+            ? "0 4px 16px rgba(0,0,0,0.04)"
+            : "0 1px 4px rgba(0,0,0,0.01)",
           transition: "all 0.2s ease",
-        } as any : { backgroundColor: CARD, borderColor: BORDER },
+        } as any : {},
       ]}
     >
       <View style={[s.menuIconWrap, { backgroundColor: iconBg }]}>
-        <Feather name={item.icon} size={16} color={iconColor} />
+        <Feather name={item.icon} size={15} color={iconColor} />
       </View>
-      <Text style={[s.menuLabel, { color: labelColor }]}>{item.label}</Text>
+      <Text style={[
+        s.menuLabel,
+        {
+          color: labelColor,
+          fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+        }
+      ]}>
+        {item.label}
+      </Text>
       {isToggle
         ? <Switch value={isDark} onValueChange={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggleTheme(); }}
-            trackColor={{ false: BORDER, true: PURPLE }}
+            trackColor={{ false: colors.border, true: colors.accent }}
             thumbColor="#fff"
           />
-        : <Feather name="chevron-right" size={15} color={hov ? PURPLE_TXT : MUTED} />
+        : <Feather name="chevron-right" size={15} color={colors.accent} />
       }
     </TouchableOpacity>
   );
 }
 
 function AboutCard() {
+  const colors = useColors();
   return (
     <View style={[
       s.aboutCard,
+      {
+        backgroundColor: colors.card,
+        borderColor: colors.border,
+      },
       isWeb ? {
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
-        backgroundColor: CARD,
-        borderColor: BORDER,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
-      } as any : { backgroundColor: CARD, borderColor: BORDER },
+        boxShadow: "0 1px 4px rgba(0,0,0,0.01)",
+      } as any : {},
     ]}>
-      <Text style={s.aboutTitle}>About StudyMate</Text>
-      <Text style={s.aboutText}>
+      <Text style={[
+        s.aboutTitle,
+        {
+          color: colors.text,
+          fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+          fontWeight: "700" as any,
+        }
+      ]}>
+        About StudyMate
+      </Text>
+      <Text style={[
+        s.aboutText,
+        {
+          color: colors.mutedForeground,
+          fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+        }
+      ]}>
         StudyMate delivers rich, interactive study notes for engineering first-year students — built by seniors who know exactly what you need.
       </Text>
       <View style={s.statsRow}>
@@ -360,10 +387,26 @@ function AboutCard() {
           { value: "Free", label: "Access" },
         ].map((stat, i) => (
           <React.Fragment key={stat.label}>
-            {i > 0 && <View style={s.statDiv} />}
+            {i > 0 && <View style={[s.statDiv, { backgroundColor: colors.border }]} />}
             <View style={s.stat}>
-              <Text style={s.statValue}>{stat.value}</Text>
-              <Text style={s.statLabel}>{stat.label}</Text>
+              <Text style={[
+                s.statValue,
+                {
+                  color: colors.accent,
+                  fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+                }
+              ]}>
+                {stat.value}
+              </Text>
+              <Text style={[
+                s.statLabel,
+                {
+                  color: colors.mutedForeground,
+                  fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+                }
+              ]}>
+                {stat.label}
+              </Text>
             </View>
           </React.Fragment>
         ))}
@@ -377,77 +420,73 @@ const s = StyleSheet.create({
   heroWrap: {
     alignItems: "center", paddingHorizontal: 20, paddingBottom: 28,
     position: "relative" as any, overflow: "hidden" as any,
-    minHeight: 220,
   },
   avatar: { marginBottom: 12 },
   avatarInner: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: "rgba(124,92,252,0.25)",
     alignItems: "center", justifyContent: "center",
   },
   editBadge: {
     position: "absolute", bottom: 2, right: 2, borderRadius: 10,
     width: 22, height: 22, alignItems: "center", justifyContent: "center",
   },
-  avatarInitial: { color: "#fff", fontSize: 34, fontFamily: "Inter_700Bold" },
-  userName:  { color: FG, fontSize: 20, fontFamily: "Inter_700Bold", marginBottom: 2 },
-  userEmail: { color: MUTED, fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 4 },
-  collegeName:{ color: MUTED, fontSize: 13, fontFamily: "Inter_500Medium", marginBottom: 10 },
+  avatarInitial: { fontSize: 34, fontWeight: "700" },
+  userName:  { fontSize: 20, fontWeight: "700", marginBottom: 2 },
+  userEmail: { fontSize: 13, marginBottom: 4 },
+  collegeNameText:{ fontSize: 13, fontFamily: "System", fontWeight: "500", marginBottom: 10 },
   badge: {
     flexDirection: "row", alignItems: "center", gap: 6,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5,
     borderWidth: 1,
   },
-  badgeText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  badgeText: { fontSize: 12, fontWeight: "600" },
 
   body: { padding: 16, gap: 12, maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
   menuGrid: { gap: 8 },
   menuItem: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 14, borderWidth: 1, padding: 14, gap: 12,
+    borderRadius: 10, borderWidth: 1, padding: 14, gap: 12,
   },
   menuIconWrap: {
     width: 36, height: 36, borderRadius: 10,
     alignItems: "center", justifyContent: "center",
   },
-  menuLabel: { flex: 1, fontSize: 15, fontFamily: "Inter_500Medium" },
+  menuLabel: { flex: 1, fontSize: 14, fontWeight: "500" },
 
-  aboutCard: { borderRadius: 16, borderWidth: 1, padding: 18, gap: 10 },
-  aboutTitle: { fontSize: 15, fontFamily: "Inter_700Bold", color: FG },
-  aboutText:  { fontSize: 13, fontFamily: "Inter_400Regular", color: MUTED, lineHeight: 20 },
+  aboutCard: { borderRadius: 10, borderWidth: 1, padding: 18, gap: 10 },
+  aboutTitle: { fontSize: 15 },
+  aboutText:  { fontSize: 13, lineHeight: 20 },
   statsRow:   { flexDirection: "row", alignItems: "center", justifyContent: "space-around", marginTop: 4 },
   stat:       { alignItems: "center" },
-  statValue:  { fontSize: 22, fontFamily: "Inter_700Bold", color: PURPLE_TXT },
-  statLabel:  { fontSize: 12, fontFamily: "Inter_400Regular", color: MUTED },
-  statDiv:    { width: 1, height: 36, backgroundColor: BORDER },
+  statValue:  { fontSize: 22, fontWeight: "700" },
+  statLabel:  { fontSize: 12 },
+  statDiv:    { width: 1, height: 36 },
 
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   modalBox: {
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 24, maxHeight: "85%" as any,
     borderWidth: 1, borderBottomWidth: 0,
   },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: FG },
+  modalTitle: { fontSize: 18, fontWeight: "700" },
   fieldRow: { flexDirection: "row", gap: 12 },
-  fieldLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", color: MUTED, letterSpacing: 1, marginBottom: 8 },
+  fieldLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 1, marginBottom: 8 },
   fieldInput: {
-    borderWidth: 1, borderRadius: 12,
+    borderWidth: 1, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 11,
-    fontSize: 15, fontFamily: "Inter_400Regular",
-    color: FG, backgroundColor: "rgba(255,255,255,0.04)",
-    borderColor: BORDER,
+    fontSize: 14,
   },
   pillRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" as any, marginBottom: 4 },
   pill: { borderWidth: 1, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14, alignItems: "center" },
-  pillText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  pillText: { fontSize: 13, fontWeight: "600" },
   errorBox: {
     flexDirection: "row", alignItems: "center", gap: 8,
     borderRadius: 10, padding: 12, marginTop: 8,
-    backgroundColor: DANGER_DIM, borderWidth: 1, borderColor: "rgba(248,113,113,0.25)",
+    backgroundColor: "rgba(239,68,68,0.06)", borderWidth: 1,
   },
-  errorText: { color: DANGER, fontSize: 13, fontFamily: "Inter_400Regular", flex: 1 },
-  saveBtn: { borderRadius: 14, overflow: "hidden" },
-  saveBtnGrad: { height: 52, alignItems: "center", justifyContent: "center" },
-  saveBtnText: { color: "#fff", fontSize: 16, fontFamily: "Inter_700Bold" },
+  errorText: { fontSize: 13, flex: 1 },
+  saveBtn: { borderRadius: 10, overflow: "hidden" },
+  saveBtnGrad: { height: 50, alignItems: "center", justifyContent: "center" },
+  saveBtnText: { fontSize: 15, fontWeight: "700" },
 });

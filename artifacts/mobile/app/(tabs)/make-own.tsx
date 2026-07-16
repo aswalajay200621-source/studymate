@@ -3,8 +3,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
@@ -19,21 +17,9 @@ import * as DocumentPicker from "expo-document-picker";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBase } from "@/utils/api";
 import { ParticleMesh } from "@/components/ParticleMesh";
+import { useColors } from "@/hooks/useColors";
 
 const isWeb = Platform.OS === "web";
-
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const BG        = "#080B1A";
-const CARD      = "rgba(15,18,40,0.85)";
-const CARD_HOV  = "rgba(20,24,52,0.95)";
-const BORDER    = "rgba(124,92,252,0.18)";
-const BORDER_H  = "rgba(124,92,252,0.45)";
-const PURPLE    = "#7C5CFC";
-const PURPLE_TXT = "#A78BFA";
-const PURPLE_LIT = "#C4B5FD";
-const MUTED     = "#6B7280";
-const FG        = "#E2E8F0";
-// ─────────────────────────────────────────────────────────────────────────────
 
 interface CustomNoteSummary {
   id: string;
@@ -45,6 +31,7 @@ interface CustomNoteSummary {
 
 export default function MakeOwnScreen() {
   const { token } = useAuth();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const topPad = isWeb ? 67 : insets.top;
 
@@ -80,7 +67,6 @@ export default function MakeOwnScreen() {
   async function handlePickFile() {
     try {
       if (isWeb) {
-        // Direct HTML file picker for highly robust web support
         const input = document.createElement("input");
         input.type = "file";
         input.accept = ".pdf,application/pdf";
@@ -132,7 +118,6 @@ export default function MakeOwnScreen() {
       if (isWeb && pdfFile.rawFile) {
         formData.append("pdf", pdfFile.rawFile, pdfFile.name);
       } else {
-        // Native upload using file uri
         formData.append("pdf", {
           uri: pdfFile.uri,
           name: pdfFile.name,
@@ -158,7 +143,6 @@ export default function MakeOwnScreen() {
       setPrompt("");
       loadHistory();
       
-      // Navigate to the newly generated note
       router.push(`/custom-note/${body.id}`);
     } catch (err: any) {
       Alert.alert("Conversion Failed", err.message ?? "Failed to convert PDF");
@@ -194,38 +178,73 @@ export default function MakeOwnScreen() {
   }
 
   return (
-    <View style={[s.root, { backgroundColor: BG }]}>
+    <View style={[s.root, { backgroundColor: colors.background }]}>
       <ParticleMesh />
 
       <ScrollView
         contentContainerStyle={[s.body, { paddingTop: topPad + 12 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={s.title}>Make Your Own</Text>
-        <Text style={s.subtitle}>Convert textbook PDFs into structured HTML notes using Gemini 2.5 Flash</Text>
+        <Text style={[
+          s.title,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "700" as any,
+          }
+        ]}>
+          Make Your Own
+        </Text>
+        <Text style={[
+          s.subtitle,
+          {
+            color: colors.accent,
+            fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+          }
+        ]}>
+          Convert textbook PDFs into structured HTML notes using Gemini 2.5 Flash
+        </Text>
 
         {/* ── File Picker & Custom Prompt Card ───────────────────────────────── */}
-        <View style={s.glassCard}>
-          <Text style={s.cardLabel}>UPLOAD PDF LECTURE NOTE / BOOK *</Text>
-          <TouchableOpacity onPress={handlePickFile} style={s.uploadZone} activeOpacity={0.8}>
+        <View style={[s.glassCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[s.cardLabel, { color: colors.mutedForeground }]}>UPLOAD PDF LECTURE NOTE / BOOK *</Text>
+          <TouchableOpacity
+            onPress={handlePickFile}
+            style={[s.uploadZone, { borderColor: colors.border, backgroundColor: colors.input }]}
+            activeOpacity={0.8}
+          >
             <View style={s.iconWrap}>
-              <Feather name="file-text" size={28} color={pdfFile ? PURPLE_TXT : MUTED} />
+              <Feather name="file-text" size={28} color={pdfFile ? colors.text : colors.mutedForeground} />
             </View>
-            <Text style={s.uploadTitle}>
+            <Text style={[
+              s.uploadTitle,
+              {
+                color: colors.text,
+                fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+              }
+            ]}>
               {pdfFile ? pdfFile.name : "Choose PDF file…"}
             </Text>
-            <Text style={s.uploadDesc}>
+            <Text style={[s.uploadDesc, { color: colors.mutedForeground }]}>
               {pdfFile ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB` : "Select PDF files up to 10MB"}
             </Text>
           </TouchableOpacity>
 
-          <Text style={[s.cardLabel, { marginTop: 16 }]}>WHAT TOPICS OR FEATURES DO YOU WANT TO FOCUS ON? (OPTIONAL)</Text>
+          <Text style={[s.cardLabel, { color: colors.mutedForeground, marginTop: 16 }]}>WHAT TOPICS OR FEATURES DO YOU WANT TO FOCUS ON? (OPTIONAL)</Text>
           <TextInput
-            style={s.promptInput}
+            style={[
+              s.promptInput,
+              {
+                color: colors.text,
+                borderColor: colors.border,
+                backgroundColor: colors.input,
+                fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+              }
+            ]}
             multiline
             numberOfLines={4}
             placeholder="e.g. Focus on mathematical derivations / simplify with analogy / summarize core formulas at the top..."
-            placeholderTextColor="#4B5563"
+            placeholderTextColor={colors.mutedForeground}
             value={prompt}
             onChangeText={setPrompt}
           />
@@ -233,53 +252,75 @@ export default function MakeOwnScreen() {
           <TouchableOpacity
             onPress={handleConvert}
             disabled={loading}
-            style={[s.generateBtn, loading && { opacity: 0.6 }]}
+            style={[s.generateBtn, { backgroundColor: colors.primary }, loading && { opacity: 0.6 }]}
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
-              <>
-                <Feather name="zap" size={15} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={s.generateBtnText}>Convert to Study Notes</Text>
-              </>
+              <View style={s.btnContent}>
+                <Feather name="zap" size={15} color={colors.primaryForeground} style={{ marginRight: 6 }} />
+                <Text style={[s.generateBtnText, { color: colors.primaryForeground }]}>Convert to Study Notes</Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
 
         {/* ── Generated Notes History ──────────────────────────────────────── */}
-        <Text style={s.sectionTitle}>Your Generated Study Notes</Text>
+        <Text style={[
+          s.sectionTitle,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "700" as any,
+          }
+        ]}>
+          Your Generated Study Notes
+        </Text>
 
         {historyLoading ? (
-          <ActivityIndicator color={PURPLE} size="large" style={{ marginTop: 24 }} />
+          <ActivityIndicator color={colors.accent} size="large" style={{ marginTop: 24 }} />
         ) : history.length === 0 ? (
           <View style={s.emptyState}>
-            <Feather name="file-plus" size={32} color={MUTED} />
-            <Text style={s.emptyText}>You haven't converted any PDFs yet.</Text>
+            <Feather name="file-plus" size={32} color={colors.mutedForeground} />
+            <Text style={[s.emptyText, { color: colors.mutedForeground }]}>You haven't converted any PDFs yet.</Text>
           </View>
         ) : (
           history.map((item) => (
             <TouchableOpacity
               key={item.id}
               onPress={() => router.push(`/custom-note/${item.id}`)}
-              style={s.historyCard}
+              style={[s.historyCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               activeOpacity={0.85}
             >
-              <View style={s.historyIcon}>
-                <Ionicons name="sparkles" size={18} color={PURPLE_TXT} />
+              <View style={[s.historyIcon, { backgroundColor: colors.secondary }]}>
+                <Ionicons name="sparkles" size={16} color={colors.accent} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.historyTitle} numberOfLines={1}>{item.title}</Text>
-                <Text style={s.historyFile} numberOfLines={1}>File: {item.fileName}</Text>
+                <Text style={[
+                  s.historyTitle,
+                  {
+                    color: colors.text,
+                    fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+                    fontWeight: "700" as any,
+                  }
+                ]} numberOfLines={1}>{item.title}</Text>
+                <Text style={[
+                  s.historyFile,
+                  {
+                    color: colors.mutedForeground,
+                    fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+                  }
+                ]} numberOfLines={1}>File: {item.fileName}</Text>
                 {item.prompt && (
-                  <Text style={s.historyPrompt} numberOfLines={1}>Focus: "{item.prompt}"</Text>
+                  <Text style={[s.historyPrompt, { color: colors.accent }]} numberOfLines={1}>Focus: "{item.prompt}"</Text>
                 )}
               </View>
               <TouchableOpacity
                 onPress={() => handleDelete(item.id, item.title)}
                 style={s.deleteBtn}
               >
-                <Feather name="trash-2" size={15} color="#EF4444" />
+                <Feather name="trash-2" size={15} color={colors.destructive} />
               </TouchableOpacity>
             </TouchableOpacity>
           ))
@@ -291,109 +332,26 @@ export default function MakeOwnScreen() {
 
 const s = StyleSheet.create({
   root: { flex: 1 },
-  body: { paddingHorizontal: 20, paddingBottom: 120 },
-  title: {
-    color: FG, fontSize: 32, fontFamily: "Inter_800ExtraBold", letterSpacing: -0.8,
-  },
-  subtitle: {
-    color: PURPLE_TXT, fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 4, marginBottom: 20,
-  },
-  glassCard: {
-    backgroundColor: CARD,
-    borderColor: BORDER,
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 28,
-    boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
-  },
-  cardLabel: {
-    color: MUTED, fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 0.8, marginBottom: 8,
-  },
-  uploadZone: {
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderStyle: "dashed",
-    borderRadius: 12,
-    paddingVertical: 24,
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  iconWrap: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  uploadTitle: {
-    color: FG, fontSize: 14, fontFamily: "Inter_600SemiBold", textAlign: "center", paddingHorizontal: 16,
-  },
-  uploadDesc: {
-    color: MUTED, fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2,
-  },
-  promptInput: {
-    backgroundColor: "rgba(255,255,255,0.03)",
-    borderColor: BORDER,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    color: FG,
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    textAlignVertical: "top",
-    marginBottom: 16,
-    minHeight: 80,
-  },
-  generateBtn: {
-    backgroundColor: PURPLE,
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-  },
-  generateBtnText: {
-    color: "#fff", fontSize: 14, fontFamily: "Inter_700Bold",
-  },
-  sectionTitle: {
-    color: FG, fontSize: 20, fontFamily: "Inter_700Bold", letterSpacing: -0.4, marginBottom: 12,
-  },
-  emptyState: {
-    alignItems: "center", justifyContent: "center", paddingVertical: 32, gap: 8,
-  },
-  emptyText: {
-    color: MUTED, fontSize: 14, fontFamily: "Inter_400Regular",
-  },
-  historyCard: {
-    backgroundColor: CARD,
-    borderColor: BORDER,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 12,
-  },
-  historyIcon: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: "rgba(124,92,252,0.12)",
-    alignItems: "center", justifyContent: "center",
-  },
-  historyTitle: {
-    color: FG, fontSize: 14, fontFamily: "Inter_600SemiBold",
-  },
-  historyFile: {
-    color: MUTED, fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 1,
-  },
-  historyPrompt: {
-    color: PURPLE_TXT, fontSize: 11, fontFamily: "Inter_400Regular", fontStyle: "italic", marginTop: 1,
-  },
-  deleteBtn: {
-    width: 32, height: 32, borderRadius: 8,
-    alignItems: "center", justifyContent: "center",
-  },
+  body: { paddingHorizontal: 20, paddingBottom: 120, maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
+  title: { fontSize: 32, letterSpacing: -0.8 },
+  subtitle: { fontSize: 13, marginTop: 4, marginBottom: 20 },
+  glassCard: { borderRadius: 10, borderWidth: 1, padding: 16, marginBottom: 28 },
+  cardLabel: { fontSize: 10, fontWeight: "600", letterSpacing: 0.8, marginBottom: 8 },
+  uploadZone: { borderWidth: 1, borderStyle: "dashed", borderRadius: 10, paddingVertical: 24, alignItems: "center" },
+  iconWrap: { width: 50, height: 50, borderRadius: 25, backgroundColor: "rgba(0,0,0,0.03)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  uploadTitle: { fontSize: 14, fontWeight: "600", textAlign: "center", paddingHorizontal: 16 },
+  uploadDesc: { fontSize: 12, marginTop: 2 },
+  promptInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 14, textAlignVertical: "top", marginBottom: 16, minHeight: 80 },
+  generateBtn: { borderRadius: 10, paddingVertical: 14, alignItems: "center", justifyContent: "center" },
+  btnContent: { flexDirection: "row", alignItems: "center" },
+  generateBtnText: { fontSize: 14, fontWeight: "700" },
+  sectionTitle: { fontSize: 20, letterSpacing: -0.4, marginBottom: 12, marginTop: 8 },
+  emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 32, gap: 8 },
+  emptyText: { fontSize: 14 },
+  historyCard: { borderRadius: 10, borderWidth: 1, padding: 12, flexDirection: "row", alignItems: "center", marginBottom: 10, gap: 12 },
+  historyIcon: { width: 36, height: 36, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  historyTitle: { fontSize: 14, marginBottom: 2 },
+  historyFile: { fontSize: 11 },
+  historyPrompt: { fontSize: 11, fontStyle: "italic", marginTop: 2 },
+  deleteBtn: { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
 });

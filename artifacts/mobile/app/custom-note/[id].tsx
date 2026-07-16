@@ -12,16 +12,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBase } from "@/utils/api";
+import { useColors } from "@/hooks/useColors";
 
 const isWeb = Platform.OS === "web";
-
-// ── Design tokens ─────────────────────────────────────────────────────────
-const BG         = "#080B1A";
-const BORDER     = "rgba(124,92,252,0.18)";
-const PURPLE     = "#7C5CFC";
-const MUTED      = "#6B7280";
-const FG         = "#E2E8F0";
-// ─────────────────────────────────────────────────────────────────────────
 
 function HtmlViewer({ html, background }: { html: string; background: string }) {
   if (isWeb) {
@@ -58,6 +51,7 @@ function HtmlViewer({ html, background }: { html: string; background: string }) 
 export default function CustomNoteViewer() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token } = useAuth();
+  const colors = useColors();
   const insets  = useSafeAreaInsets();
   const topPad  = isWeb ? 67 : insets.top;
 
@@ -86,55 +80,68 @@ export default function CustomNoteViewer() {
 
   if (loading) {
     return (
-      <View style={[s.root, { backgroundColor: BG, justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={PURPLE} size="large" />
+      <View style={[s.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
   if (!note) {
     return (
-      <View style={[s.root, { backgroundColor: BG, justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: FG }}>Study notes not found</Text>
+      <View style={[s.root, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: colors.text }}>Custom note shelf not found</Text>
       </View>
     );
   }
 
   return (
-    <View style={[s.root, { backgroundColor: BG }]}>
+    <View style={[s.root, { backgroundColor: colors.background }]}>
       {/* ── Header ───────────────────────────────────────────────── */}
       <View
         style={[
           s.header,
-          { paddingTop: topPad + 8, borderBottomColor: "rgba(124,92,252,0.25)", borderLeftColor: PURPLE },
+          {
+            paddingTop: topPad + 8,
+            backgroundColor: colors.card,
+            borderBottomColor: colors.border,
+            borderLeftColor: colors.accent,
+          },
           isWeb ? {
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            backgroundColor: "rgba(8,11,26,0.82)",
-            boxShadow: `0 1px 0 rgba(124,92,252,0.15)`,
-          } as any : { backgroundColor: "rgba(12,14,32,0.96)" },
+            boxShadow: `0 1px 0 rgba(184,147,90,0.06)`,
+          } as any : {},
         ]}
       >
-        <View style={s.headerTop}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={[s.backBtn, { borderColor: BORDER, backgroundColor: "rgba(255,255,255,0.06)" }]}
-          >
-            <Feather name="arrow-left" size={18} color={FG} />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={s.subjectLabel} numberOfLines={1}>
-              Custom Study Guide
-            </Text>
-            <Text style={s.chapterTitle} numberOfLines={2}>
-              {note.title}
-            </Text>
+        <View style={s.headerInner}>
+          <View style={s.headerTop}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={[s.backBtn, { borderColor: colors.border, backgroundColor: colors.secondary }]}
+            >
+              <Feather name="arrow-left" size={18} color={colors.text} />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.subjectLabel, { color: colors.accent, fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System" }]} numberOfLines={1}>
+                Custom Study Guide Shelf
+              </Text>
+              <Text style={[
+                s.chapterTitle,
+                {
+                  color: colors.text,
+                  fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+                  fontWeight: "700" as any,
+                }
+              ]} numberOfLines={2}>
+                {note.title}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
 
       {/* ── HTML Viewer ─────────────────────────────────────────── */}
-      <HtmlViewer html={note.contentHtml} background={BG} />
+      <HtmlViewer html={note.contentHtml} background={colors.card} />
     </View>
   );
 }
@@ -142,23 +149,22 @@ export default function CustomNoteViewer() {
 const s = StyleSheet.create({
   root:   { flex: 1 },
   header: {
-    borderBottomWidth: 1, borderLeftWidth: 3,
+    borderBottomWidth: 1, borderLeftWidth: 4,
     paddingBottom: 12, position: "relative" as any,
   },
+  headerInner: { maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
   headerTop: {
     flexDirection: "row", alignItems: "flex-start",
     gap: 12, paddingHorizontal: 16, paddingTop: 8,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 10,
+    width: 36, height: 36, borderRadius: 8,
     alignItems: "center", justifyContent: "center",
     marginTop: 2, borderWidth: 1,
   },
   subjectLabel: {
-    fontSize: 11, fontFamily: "Inter_700Bold",
-    letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2, color: "#C4B5FD",
+    fontSize: 11,
+    letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2,
   },
-  chapterTitle: {
-    color: FG, fontSize: 17, fontFamily: "Inter_700Bold", lineHeight: 23,
-  },
+  chapterTitle: { fontSize: 17, lineHeight: 23 },
 });

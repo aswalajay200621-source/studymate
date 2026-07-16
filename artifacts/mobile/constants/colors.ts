@@ -1,55 +1,55 @@
 const colors = {
   light: {
-    text: "#1A1A2E",
-    tint: "#4361EE",
-    background: "#F8FAFF",
-    foreground: "#1A1A2E",
-    card: "#FFFFFF",
-    cardForeground: "#1A1A2E",
-    primary: "#4361EE",
-    primaryForeground: "#FFFFFF",
-    secondary: "#EEF2FF",
-    secondaryForeground: "#3730A3",
-    muted: "#F0F2F8",
-    mutedForeground: "#64748B",
-    accent: "#F72585",
-    accentForeground: "#FFFFFF",
-    destructive: "#EF4444",
-    destructiveForeground: "#FFFFFF",
-    border: "#E2E8F0",
-    input: "#E2E8F0",
-    success: "#10B981",
-    warning: "#F59E0B",
-    cseColor: "#4361EE",
-    eeeColor: "#7C3AED",
+    text: "#2A2622",                  // Ink
+    tint: "#152238",                  // Navy
+    background: "#F5EFE0",            // Cream
+    foreground: "#2A2622",            // Ink
+    card: "#FBF8EF",                  // Paper
+    cardForeground: "#2A2622",
+    primary: "#152238",                // Navy
+    primaryForeground: "#FBF8EF",     // Paper
+    secondary: "#EFE7D3",              // Cream 2
+    secondaryForeground: "#5B5648",    // Ink Soft
+    muted: "#EFE7D3",
+    mutedForeground: "#5B5648",
+    accent: "#B8935A",                 // Gold
+    accentForeground: "#FBF8EF",
+    destructive: "#9B3131",            // Oxblood
+    destructiveForeground: "#FBF8EF",
+    border: "rgba(184, 147, 90, 0.3)", // Gold tint border
+    input: "#EFE7D3",
+    success: "#3D5A44",                // Library Green
+    warning: "#B8935A",
+    cseColor: "#9B3131",               // Oxblood
+    eeeColor: "#B8935A",               // Gold
   },
 
   dark: {
-    text: "#E2E8F0",
-    tint: "#A78BFA",
-    background: "#080B1A",
-    foreground: "#E2E8F0",
-    card: "#0F1228",
-    cardForeground: "#E2E8F0",
-    primary: "#7C5CFC",
-    primaryForeground: "#FFFFFF",
-    secondary: "#151830",
-    secondaryForeground: "#A5B4FC",
-    muted: "#0F1228",
-    mutedForeground: "#6B7280",
-    accent: "#F72585",
-    accentForeground: "#FFFFFF",
-    destructive: "#F87171",
-    destructiveForeground: "#FFFFFF",
-    border: "#1E2240",
-    input: "#141830",
-    success: "#34D399",
-    warning: "#FBBF24",
-    cseColor: "#818CF8",
-    eeeColor: "#A78BFA",
+    text: "#FBF8EF",                  // Paper
+    tint: "#D2AC79",                  // Gold Bright
+    background: "#0D1729",            // Navy Deep
+    foreground: "#FBF8EF",            // Paper
+    card: "#152238",                  // Navy
+    cardForeground: "#FBF8EF",
+    primary: "#D2AC79",                // Gold Bright
+    primaryForeground: "#0D1729",     // Navy Deep
+    secondary: "#1E3050",              // Navy Soft
+    secondaryForeground: "#C6CBD6",
+    muted: "#1E3050",
+    mutedForeground: "#8B93A6",
+    accent: "#D2AC79",                 // Gold Bright
+    accentForeground: "#0D1729",
+    destructive: "#EF4444",
+    destructiveForeground: "#FBF8EF",
+    border: "rgba(210, 172, 121, 0.2)",
+    input: "#1E3050",
+    success: "#5C7C5D",
+    warning: "#D2AC79",
+    cseColor: "#F87171",
+    eeeColor: "#D2AC79",
   },
 
-  radius: 12,
+  radius: 10,
 };
 
 export default colors;

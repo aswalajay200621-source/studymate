@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setToken(null);
         setIsAuthLoading(false);
-        return null;
+        return;
       }
 
       const apiBase = getApiBase();
@@ -123,17 +123,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(normalized);
         setToken(storedToken);
         await secureSet(AUTH_TOKEN_KEY, storedToken);
-        return normalized;
       } else {
         await secureDelete(AUTH_TOKEN_KEY);
         setUser(null);
         setToken(null);
-        return null;
       }
     } catch {
       setUser(null);
       setToken(null);
-      return null;
     } finally {
       setIsAuthLoading(false);
     }
@@ -160,12 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.token) {
         await secureSet(AUTH_TOKEN_KEY, data.token);
         setIsAuthLoading(true);
-        const loggedInUser = await fetchUser(data.token);
-        if (loggedInUser?.role === "admin") {
-          router.replace("/(admin)");
-        } else {
-          router.replace("/(tabs)");
-        }
+        await fetchUser(data.token);
+        router.replace("/(tabs)");
       }
       return {};
     } catch {
@@ -190,12 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (body.token) {
         await secureSet(AUTH_TOKEN_KEY, body.token);
         setIsAuthLoading(true);
-        const loggedInUser = await fetchUser(body.token);
-        if (loggedInUser?.role === "admin") {
-          router.replace("/(admin)");
-        } else {
-          router.replace("/onboarding");
-        }
+        await fetchUser(body.token);
+        router.replace("/onboarding");
       }
       return {};
     } catch {

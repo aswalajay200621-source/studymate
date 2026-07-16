@@ -1,18 +1,18 @@
 /**
- * Animated purple particle-network mesh — desktop/web only.
- * Canvas is created imperatively so it bypasses React Native's
- * component type system while staying compatible with RN Web.
+ * Warm drifting dust particles background component (Web only).
+ * Matches the paper/library showcase style of the login screen.
  */
 import React, { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 
-interface Particle {
+interface DustParticle {
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   r: number;
   alpha: number;
+  speed: number;
+  drift: number;
+  phase: number;
 }
 
 export function ParticleMesh() {
@@ -34,72 +34,50 @@ export function ParticleMesh() {
     });
     mount.appendChild(canvas);
 
-    let W = 0,
-      H = 0;
-    let pts: Particle[] = [];
+    let W = 0, H = 0;
+    let particles: DustParticle[] = [];
     let raf = 0;
 
     function resize() {
-      W = mount!.offsetWidth;
-      H = mount!.offsetHeight;
+      if (!mount) return;
+      W = mount.offsetWidth;
+      H = mount.offsetHeight;
       canvas.width = W;
       canvas.height = H;
     }
 
     function init() {
-      pts = Array.from({ length: 72 }, () => ({
+      particles = Array.from({ length: 45 }, () => ({
         x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: (Math.random() - 0.5) * 0.35,
-        r: Math.random() * 1.4 + 0.5,
-        alpha: Math.random() * 0.55 + 0.2,
+        y: H + Math.random() * 50,
+        r: Math.random() * 1.5 + 0.6,
+        alpha: Math.random() * 0.35 + 0.15,
+        speed: Math.random() * 0.4 + 0.2,
+        drift: (Math.random() - 0.5) * 0.3,
+        phase: Math.random() * Math.PI * 2,
       }));
     }
 
     function tick() {
       ctx.clearRect(0, 0, W, H);
-
-      // connections
-      for (let i = 0; i < pts.length; i++) {
-        for (let j = i + 1; j < pts.length; j++) {
-          const dx = pts[i].x - pts[j].x;
-          const dy = pts[i].y - pts[j].y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 130) {
-            const a = (1 - d / 130) * 0.14;
-            ctx.beginPath();
-            ctx.moveTo(pts[i].x, pts[i].y);
-            ctx.lineTo(pts[j].x, pts[j].y);
-            ctx.strokeStyle = `rgba(139,92,246,${a})`;
-            ctx.lineWidth = 0.6;
-            ctx.stroke();
-          }
-        }
-      }
-
-      // particles + soft glow
-      for (const p of pts) {
-        // glow halo
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5);
-        g.addColorStop(0, `rgba(139,92,246,${p.alpha * 0.28})`);
-        g.addColorStop(1, "rgba(139,92,246,0)");
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 5, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
-
-        // core dot
+      
+      // Draw warm gold dust particles
+      for (const p of particles) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(196,181,253,${p.alpha})`;
+        // Gold bright: #D2AC79
+        ctx.fillStyle = `rgba(210, 172, 121, ${p.alpha})`;
         ctx.fill();
 
-        // move
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > W) p.vx *= -1;
-        if (p.y < 0 || p.y > H) p.vy *= -1;
+        // Move particle up
+        p.y -= p.speed;
+        p.x += p.drift + Math.sin(p.y * 0.01 + p.phase) * 0.2;
+
+        // Reset if goes off top
+        if (p.y < -10) {
+          p.y = H + Math.random() * 20;
+          p.x = Math.random() * W;
+        }
       }
 
       raf = requestAnimationFrame(tick);
@@ -117,7 +95,7 @@ export function ParticleMesh() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      if (mount.contains(canvas)) mount.removeChild(canvas);
+      if (mount && mount.contains(canvas)) mount.removeChild(canvas);
     };
   }, []);
 

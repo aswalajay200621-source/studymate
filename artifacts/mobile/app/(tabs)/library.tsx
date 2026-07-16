@@ -16,22 +16,9 @@ import { useApp } from "@/context/AppContext";
 import { COLLEGES } from "@/data/content";
 import { useApiSubjects, type ApiSubject } from "@/hooks/useApiSubjects";
 import { ParticleMesh } from "@/components/ParticleMesh";
+import { useColors } from "@/hooks/useColors";
 
 const isWeb = Platform.OS === "web";
-
-// ── Design tokens (deep-space purple theme) ──────────────────────────────────
-const BG        = "#080B1A";
-const CARD      = "rgba(15,18,40,0.85)";
-const CARD_HOV  = "rgba(20,24,52,0.95)";
-const BORDER    = "rgba(124,92,252,0.18)";
-const BORDER_H  = "rgba(124,92,252,0.45)";
-const PURPLE    = "#7C5CFC";
-const PURPLE_DIM = "rgba(124,92,252,0.12)";
-const PURPLE_TXT = "#A78BFA";
-const PURPLE_LIT = "#C4B5FD";
-const MUTED     = "#6B7280";
-const FG        = "#E2E8F0";
-// ─────────────────────────────────────────────────────────────────────────────
 
 function webHover(setFn: (v: boolean) => void) {
   if (!isWeb) return {};
@@ -40,6 +27,7 @@ function webHover(setFn: (v: boolean) => void) {
 
 export default function LibraryScreen() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { selectedCollege } = useApp();
   const topPad = isWeb ? 67 : insets.top;
   const [query, setQuery] = useState("");
@@ -64,59 +52,82 @@ export default function LibraryScreen() {
   const sem2 = filtered.filter((s) => s.semester === 2);
 
   return (
-    <View style={[s.root, { backgroundColor: BG }]}>
-      {/* Particle field background */}
+    <View style={[s.root, { backgroundColor: colors.background }]}>
+      {/* Drifting warm library particles background */}
       <ParticleMesh />
 
       {/* Header */}
       <View
         style={[
           s.header,
-          { paddingTop: topPad + 12 },
+          {
+            paddingTop: topPad + 12,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.card,
+          },
           isWeb ? {
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            backgroundColor: "rgba(8,11,26,0.80)",
-            borderBottomColor: BORDER,
-            boxShadow: "0 1px 0 rgba(124,92,252,0.10), 0 4px 24px rgba(0,0,0,0.4)",
-          } as any : { backgroundColor: BG, borderBottomColor: BORDER },
+            boxShadow: "0 1px 0 rgba(184,147,90,0.08), 0 4px 20px rgba(0,0,0,0.04)",
+          } as any : {},
         ]}
       >
-        <Text style={s.title}>Library</Text>
-        <Text style={[s.subtitle, { color: PURPLE_TXT }]}>{college.fullName}</Text>
+        <View style={s.headerInner}>
+          <Text style={[
+            s.title,
+            {
+              color: colors.text,
+              fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            }
+          ]}>
+            Library Shelf
+          </Text>
+          <Text style={[
+            s.subtitle,
+            {
+              color: colors.accent,
+              fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+            }
+          ]}>
+            {college.fullName}
+          </Text>
 
-        {/* Search bar */}
-        <View
-          style={[
-            s.searchRow,
-            isWeb ? {
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              backgroundColor: "rgba(255,255,255,0.04)",
-              borderColor: BORDER,
-              boxShadow: "0 0 0 1px rgba(124,92,252,0.08)",
-            } as any : { backgroundColor: "rgba(255,255,255,0.04)", borderColor: BORDER },
-          ]}
-        >
-          <Feather name="search" size={16} color={MUTED} />
-          <TextInput
-            style={s.searchInput}
-            placeholder="Search subjects..."
-            placeholderTextColor={MUTED}
-            value={query}
-            onChangeText={setQuery}
-          />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery("")}>
-              <Feather name="x" size={15} color={MUTED} />
-            </TouchableOpacity>
-          )}
+          {/* Search bar */}
+          <View
+            style={[
+              s.searchRow,
+              {
+                backgroundColor: colors.input,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Feather name="search" size={16} color={colors.accent} />
+            <TextInput
+              style={[
+                s.searchInput,
+                {
+                  color: colors.text,
+                  fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+                }
+              ]}
+              placeholder="Search subjects..."
+              placeholderTextColor={colors.mutedForeground}
+              value={query}
+              onChangeText={setQuery}
+            />
+            {query.length > 0 && (
+              <TouchableOpacity onPress={() => setQuery("")}>
+                <Feather name="x" size={15} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
 
       {loading ? (
         <View style={s.center}>
-          <ActivityIndicator color={PURPLE} size="large" />
+          <ActivityIndicator color={colors.accent} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -124,15 +135,17 @@ export default function LibraryScreen() {
           showsVerticalScrollIndicator={false}
         >
           {sem1.length > 0 && (
-            <SubjectGroup title="Semester 1" subjects={sem1} />
+            <SubjectGroup title="Semester 1 Shelf" subjects={sem1} />
           )}
           {sem2.length > 0 && (
-            <SubjectGroup title="Semester 2" subjects={sem2} />
+            <SubjectGroup title="Semester 2 Shelf" subjects={sem2} />
           )}
           {filtered.length === 0 && (
             <View style={s.empty}>
-              <Feather name="search" size={36} color={MUTED} />
-              <Text style={s.emptyText}>No subjects found</Text>
+              <Feather name="search" size={32} color={colors.mutedForeground} />
+              <Text style={[s.emptyText, { color: colors.mutedForeground, fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System" }]}>
+                No subjects shelf found
+              </Text>
             </View>
           )}
         </ScrollView>
@@ -142,7 +155,10 @@ export default function LibraryScreen() {
 }
 
 function SubjectCard({ sub }: { sub: ApiSubject }) {
+  const colors = useColors();
   const [hov, setHov] = useState(false);
+  const borderStripColor = sub.college === "CSE" ? "#9B3131" : "#B8935A";
+
   return (
     <TouchableOpacity
       key={sub.id}
@@ -151,40 +167,84 @@ function SubjectCard({ sub }: { sub: ApiSubject }) {
       {...(webHover(setHov) as any)}
       style={[
         sg.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: hov ? colors.accent : colors.border,
+          borderLeftColor: borderStripColor,
+        },
         isWeb ? {
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
-          backgroundColor: hov ? CARD_HOV : CARD,
-          borderColor: hov ? BORDER_H : BORDER,
           boxShadow: hov
-            ? `0 0 0 1px ${BORDER_H}, 0 4px 24px rgba(124,92,252,0.18), inset 0 1px 0 rgba(255,255,255,0.04)`
-            : `0 2px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)`,
+            ? `0 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(184,147,90,0.2)`
+            : `0 1px 4px rgba(0,0,0,0.02)`,
           transition: "all 0.22s ease",
-        } as any : { backgroundColor: CARD, borderColor: BORDER },
+        } as any : {},
       ]}
     >
-      <View style={[sg.iconWrap, { backgroundColor: sub.color + "18", borderColor: sub.color + "30", borderWidth: 1 }]}>
+      <View style={[sg.iconWrap, { backgroundColor: sub.color + "12", borderColor: sub.color + "25", borderWidth: 1 }]}>
         {/^[a-z][a-z0-9-]*$/.test(sub.icon)
-          ? <Ionicons name={sub.icon as any} size={22} color={sub.color} />
-          : <Text style={{ fontSize: 22 }}>{sub.icon}</Text>}
+          ? <Ionicons name={sub.icon as any} size={20} color={sub.color} />
+          : <Text style={{ fontSize: 20 }}>{sub.icon}</Text>}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={sg.name}>{sub.name}</Text>
-        <Text style={[sg.code, { color: sub.color }]}>{sub.code}</Text>
-        <Text style={sg.desc} numberOfLines={1}>{sub.description}</Text>
-        <Text style={sg.chapters}>
+        <Text style={[
+          sg.name,
+          {
+            color: colors.text,
+            fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+            fontWeight: "700" as any,
+          }
+        ]}>
+          {sub.name}
+        </Text>
+        <Text style={[
+          sg.code,
+          {
+            color: colors.accent,
+            fontFamily: isWeb ? "'JetBrains Mono', monospace" : "System",
+          }
+        ]}>
+          {sub.code}
+        </Text>
+        <Text style={[
+          sg.desc,
+          {
+            color: colors.mutedForeground,
+            fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+          }
+        ]} numberOfLines={1}>
+          {sub.description}
+        </Text>
+        <Text style={[
+          sg.chapters,
+          {
+            color: colors.mutedForeground,
+            fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System",
+          }
+        ]}>
           {sub.chapterCount} chapter{sub.chapterCount !== 1 ? "s" : ""}
         </Text>
       </View>
-      <Feather name="chevron-right" size={16} color={hov ? PURPLE_TXT : MUTED} />
+      <Feather name="chevron-right" size={16} color={colors.accent} />
     </TouchableOpacity>
   );
 }
 
 function SubjectGroup({ title, subjects }: { title: string; subjects: ApiSubject[] }) {
+  const colors = useColors();
   return (
     <View style={sg.group}>
-      <Text style={sg.groupTitle}>{title}</Text>
+      <Text style={[
+        sg.groupTitle,
+        {
+          color: colors.text,
+          fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+          fontWeight: "700" as any,
+        }
+      ]}>
+        {title}
+      </Text>
       {subjects.map((sub) => <SubjectCard key={sub.id} sub={sub} />)}
     </View>
   );
@@ -196,37 +256,38 @@ const s = StyleSheet.create({
     paddingHorizontal: 20, paddingBottom: 16,
     borderBottomWidth: 1,
   },
-  title:      { fontSize: 28, fontFamily: "Inter_700Bold", color: FG, marginBottom: 2 },
-  subtitle:   { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 14 },
+  headerInner: { maxWidth: 860, width: "100%" as any, alignSelf: "center" as any },
+  title:      { fontSize: 28, fontWeight: "700", marginBottom: 2 },
+  subtitle:   { fontSize: 13, fontWeight: "600", marginBottom: 14 },
   searchRow: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 12, borderWidth: 1,
+    borderRadius: 10, borderWidth: 1,
     paddingHorizontal: 12, paddingVertical: 10, gap: 8,
   },
-  searchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", color: FG, outlineStyle: "none" as any },
+  searchInput: { flex: 1, fontSize: 14, outlineStyle: "none" as any, borderWidth: 0 },
   body:    { maxWidth: 860, width: "100%" as any, alignSelf: "center" as any, padding: 16, gap: 8 },
   center:  { flex: 1, alignItems: "center", justifyContent: "center" },
   empty:   { alignItems: "center", paddingTop: 80, gap: 12 },
-  emptyText: { fontSize: 15, fontFamily: "Inter_400Regular", color: MUTED },
+  emptyText: { fontSize: 14 },
 });
 
 const sg = StyleSheet.create({
   group:      { marginBottom: 8, gap: 8 },
   groupTitle: {
-    fontSize: 16, fontFamily: "Inter_700Bold",
-    color: FG, marginBottom: 6, marginTop: 10,
+    fontSize: 16,
+    marginBottom: 6, marginTop: 10,
     letterSpacing: 0.3,
   },
   card: {
     flexDirection: "row", alignItems: "center",
-    borderRadius: 16, borderWidth: 1, padding: 14, gap: 12,
+    borderRadius: 10, borderWidth: 1, borderLeftWidth: 4, padding: 14, gap: 12,
   },
   iconWrap: {
-    width: 48, height: 48, borderRadius: 14,
+    width: 44, height: 44, borderRadius: 10,
     alignItems: "center", justifyContent: "center", flexShrink: 0,
   },
-  name:     { fontSize: 15, fontFamily: "Inter_700Bold", color: FG, marginBottom: 2 },
-  code:     { fontSize: 11, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
-  desc:     { fontSize: 12, fontFamily: "Inter_400Regular", color: MUTED, marginBottom: 2 },
-  chapters: { fontSize: 11, fontFamily: "Inter_400Regular", color: MUTED },
+  name:     { fontSize: 15, marginBottom: 2 },
+  code:     { fontSize: 11, marginBottom: 2 },
+  desc:     { fontSize: 12, marginBottom: 2 },
+  chapters: { fontSize: 11 },
 });
