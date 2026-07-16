@@ -107,7 +107,7 @@ function InjectStyles() {
 // ─── Main login screen ────────────────────────────────────────────────────────
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isAuthLoading, emailLogin } = useAuth();
+  const { user, isAuthLoading, emailLogin, isAdmin } = useAuth();
   const isDesktop = useIsDesktop();
 
   const [email, setEmail]               = useState("");
@@ -166,7 +166,7 @@ export default function LoginScreen() {
     });
   });
 
-  if (!isAuthLoading && user) return <Redirect href="/(tabs)" />;
+  if (!isAuthLoading && user) return <Redirect href={isAdmin ? "/(admin)" : "/(tabs)"} />;
 
   async function handleLogin() {
     setError("");

@@ -108,7 +108,6 @@ export default function ProfileScreen() {
     { icon: "edit-2" as const,    label: "Edit Profile",    onPress: openEdit },
     { icon: "book-open" as const, label: "My Subjects Shelf", onPress: () => router.push("/(tabs)/library") },
     { icon: "refresh-cw" as const,label: "Change College Shelf", onPress: handleChangeCollege },
-    ...(isAdmin ? [{ icon: "shield" as const, label: "Admin Panel", onPress: () => router.push("/(admin)"), admin: true }] : []),
     { icon: "log-out" as const,   label: "Log Out Account",   onPress: handleLogout, danger: true },
   ];
 

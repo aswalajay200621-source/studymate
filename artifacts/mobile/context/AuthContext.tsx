@@ -158,7 +158,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await secureSet(AUTH_TOKEN_KEY, data.token);
         setIsAuthLoading(true);
         await fetchUser(data.token);
-        router.replace("/(tabs)");
+        // Redirect based on role returned from the API login response
+        const role = data.user?.role ?? "student";
+        if (role === "admin") {
+          router.replace("/(admin)");
+        } else {
+          router.replace("/(tabs)");
+        }
       }
       return {};
     } catch {
