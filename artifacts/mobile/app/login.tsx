@@ -351,7 +351,7 @@ export default function LoginScreen() {
               React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: "0.06em", textTransform: "uppercase", color: "#8B93A6" } }, "Quizzes")
             )
           )
-        ),
+        )}
 
         {/* ================= RIGHT PANEL — Ticket Form ================= */}
         {React.createElement("section", {
