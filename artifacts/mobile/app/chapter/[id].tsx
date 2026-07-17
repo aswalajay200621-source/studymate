@@ -76,7 +76,7 @@ export default function ChapterScreen() {
     );
   }
 
-  const borderStripColor = subject?.college === "CSE" ? "#9B3131" : "#B8935A";
+  const borderStripColor = subject?.college === "CSE" ? colors.cseColor : colors.eeeColor;
 
   const htmlContent = chapter.contentHtml
     ? chapter.contentHtml
@@ -97,7 +97,7 @@ export default function ChapterScreen() {
           isWeb ? {
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            boxShadow: `0 1px 0 rgba(184,147,90,0.06)`,
+            boxShadow: "0 1px 0 " + colors.border,
           } as any : {},
         ]}
       >

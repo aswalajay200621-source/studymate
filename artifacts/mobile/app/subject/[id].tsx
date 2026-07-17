@@ -48,7 +48,7 @@ export default function SubjectScreen() {
   }
 
   // Left indicator strip color
-  const borderStripColor = subject.college === "CSE" ? "#9B3131" : "#B8935A";
+  const borderStripColor = subject.college === "CSE" ? colors.cseColor : colors.eeeColor;
 
   return (
     <View style={[s.root, { backgroundColor: colors.background }]}>
@@ -66,7 +66,7 @@ export default function SubjectScreen() {
           isWeb ? {
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            boxShadow: `0 1px 0 rgba(184,147,90,0.06), 0 4px 24px rgba(0,0,0,0.04)`,
+            boxShadow: "0 1px 0 " + colors.border + ", 0 4px 24px rgba(0,0,0,0.03)",
           } as any : {},
         ]}
       >
@@ -196,7 +196,7 @@ function ChapterCard({
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           boxShadow: hov
-            ? `0 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(184,147,90,0.2)`
+            ? ("0 4px 16px rgba(0,0,0,0.06), 0 0 1px " + colors.accent)
             : "0 1px 4px rgba(0,0,0,0.02)",
           transition: "all 0.22s ease",
         } as any : {},

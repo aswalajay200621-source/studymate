@@ -109,7 +109,7 @@ export default function CustomNoteViewer() {
           isWeb ? {
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            boxShadow: `0 1px 0 rgba(184,147,90,0.06)`,
+            boxShadow: "0 1px 0 " + colors.border,
           } as any : {},
         ]}
       >

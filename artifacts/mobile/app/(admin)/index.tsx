@@ -443,7 +443,7 @@ export default function AdminDashboard() {
                       ) : semSubs.map((sub) => {
                         const chapters = chapterMap[sub.id] ?? [];
                         const subOpen = !!openSubjects[sub.id];
-                        const subIndicatorColor = sub.college === "CSE" ? "#9B3131" : "#B8935A";
+                        const subIndicatorColor = sub.college === "CSE" ? colors.cseColor : colors.eeeColor;
 
                         return (
                           <View key={sub.id} style={[s.subBlock, { borderTopColor: colors.border }]}>

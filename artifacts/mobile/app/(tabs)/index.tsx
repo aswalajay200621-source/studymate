@@ -49,8 +49,8 @@ function FeatCard({ icon, label, color }: { icon: string; label: string; color: 
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
           boxShadow: hov
-            ? "0 4px 14px rgba(184,147,90,0.12), inset 0 1px 0 rgba(255,255,255,0.05)"
-            : "0 2px 8px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.02)",
+            ? (isDark ? "0 4px 14px rgba(99,102,241,0.15)" : "0 4px 14px rgba(79,70,229,0.08)")
+            : "0 2px 8px rgba(0,0,0,0.03)",
           transition: "all 0.22s ease",
         } as any : {},
       ]}
@@ -77,7 +77,7 @@ function SubjectRow({ sub }: { sub: any }) {
   const [hov, setHov] = useState(false);
   
   // Left border color strip: use Oxblood for CSE, Gold for EEE, or standard sub.color
-  const borderStripColor = sub.college === "CSE" ? "#9B3131" : "#B8935A";
+  const borderStripColor = sub.college === "CSE" ? colors.cseColor : colors.eeeColor;
 
   return (
     <TouchableOpacity
@@ -95,7 +95,7 @@ function SubjectRow({ sub }: { sub: any }) {
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
           boxShadow: hov
-            ? "0 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(184,147,90,0.2)"
+            ? ("0 4px 16px rgba(0,0,0,0.06), 0 0 1px " + colors.accent)
             : "0 1px 4px rgba(0,0,0,0.02)",
           transition: "all 0.22s ease",
         } as any : {},
@@ -233,9 +233,9 @@ export default function HomeScreen() {
                 <Text style={[s.pillText, { color: colors.text }]}>{subjects.length} Subjects Shelf</Text>
               </View>
               {isDark ? (
-                <View style={[s.pill, { backgroundColor: "rgba(184,147,90,0.12)", borderColor: "rgba(184,147,90,0.25)" }]}>
+                <View style={[s.pill, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                   <Feather name="moon" size={11} color={colors.accent} />
-                  <Text style={[s.pillText, { color: colors.accent }]}>Midnight Library</Text>
+                  <Text style={[s.pillText, { color: colors.text }]}>Midnight Library</Text>
                 </View>
               ) : null}
             </View>

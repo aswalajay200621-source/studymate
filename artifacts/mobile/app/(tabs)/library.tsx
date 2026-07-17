@@ -68,7 +68,7 @@ export default function LibraryScreen() {
           isWeb ? {
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            boxShadow: "0 1px 0 rgba(184,147,90,0.08), 0 4px 20px rgba(0,0,0,0.04)",
+            boxShadow: "0 1px 0 " + colors.border + ", 0 4px 20px rgba(0,0,0,0.03)",
           } as any : {},
         ]}
       >
@@ -157,7 +157,7 @@ export default function LibraryScreen() {
 function SubjectCard({ sub }: { sub: ApiSubject }) {
   const colors = useColors();
   const [hov, setHov] = useState(false);
-  const borderStripColor = sub.college === "CSE" ? "#9B3131" : "#B8935A";
+  const borderStripColor = sub.college === "CSE" ? colors.cseColor : colors.eeeColor;
 
   return (
     <TouchableOpacity
@@ -176,7 +176,7 @@ function SubjectCard({ sub }: { sub: ApiSubject }) {
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           boxShadow: hov
-            ? `0 4px 16px rgba(0,0,0,0.06), 0 0 1px rgba(184,147,90,0.2)`
+            ? ("0 4px 16px rgba(0,0,0,0.06), 0 0 1px " + colors.accent)
             : `0 1px 4px rgba(0,0,0,0.02)`,
           transition: "all 0.22s ease",
         } as any : {},

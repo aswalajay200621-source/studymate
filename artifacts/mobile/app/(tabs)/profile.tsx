@@ -126,7 +126,7 @@ export default function ProfileScreen() {
                 borderWidth: 1.5,
               },
               isWeb ? {
-                boxShadow: "0 0 16px rgba(184,147,90,0.12)",
+                boxShadow: "0 0 16px " + colors.border,
               } as any : {}
             ]}>
               <Text style={[s.avatarInitial, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>
@@ -164,7 +164,7 @@ export default function ProfileScreen() {
               <Text style={[s.badgeText, { color: colors.text }]}>Library Admin</Text>
             </View>
           ) : isSubscribed ? (
-            <View style={[s.badge, { backgroundColor: "rgba(184,147,90,0.12)", borderColor: colors.border }]}>
+            <View style={[s.badge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
               <Feather name="star" size={12} color={colors.accent} />
               <Text style={[s.badgeText, { color: colors.accent }]}>Pro Student Member</Text>
             </View>

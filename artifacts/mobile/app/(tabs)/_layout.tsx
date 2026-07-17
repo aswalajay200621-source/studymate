@@ -123,7 +123,7 @@ function DesktopHeader() {
       isWeb ? {
         backdropFilter: "blur(24px)",
         WebkitBackdropFilter: "blur(24px)",
-        boxShadow: "0 1px 0 rgba(184,147,90,0.06), 0 4px 20px rgba(0,0,0,0.05)",
+        boxShadow: "0 1px 0 " + colors.border + ", 0 4px 20px rgba(0,0,0,0.04)",
       } as any : {},
     ]}>
       <InjectWebLayoutStyles />
