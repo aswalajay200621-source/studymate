@@ -366,7 +366,7 @@ const s = StyleSheet.create({
 
   // Hero card
   heroCard:      { padding: 28, overflow: "hidden", position: "relative" },
-  heroCardDesktop: { width: "63%" as any },
+  heroCardDesktop: { width: "65%" as any },
   heroWatermark: {
     position: "absolute", top: 16, right: 16,
     opacity: 0.15, transform: [{ rotate: "-10deg" }],
@@ -394,7 +394,7 @@ const s = StyleSheet.create({
 
   // Small cards
   smallCard:     { padding: 24, flex: 1, minWidth: 220 },
-  smallCardDesktop: { width: "30%" as any, flex: 0 },
+  smallCardDesktop: { width: "31%" as any, flex: 0 },
   smallCardIcon: { width: 52, height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 16 },
   smallCardBadgeRow: { flexDirection: "row", marginBottom: 10 },
   smallCardTitle: {
@@ -417,9 +417,9 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     flexDirection: "row",
     minHeight: 160,
-    flex: 1,
+    width: "100%" as any,
   },
-  addCardDesktop: { width: "63%" as any, flex: 0 },
+  addCardDesktop: { width: "65%" as any, flex: 0 },
   addCardCircle: {
     width: 72, height: 72, borderRadius: 36,
     backgroundColor: "rgba(255,255,255,0.04)",
