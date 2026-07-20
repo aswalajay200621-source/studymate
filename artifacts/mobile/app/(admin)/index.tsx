@@ -155,6 +155,7 @@ export default function AdminDashboard() {
   const [subjects, setSubjects]           = useState<Subject[]>([]);
   const [chapterMap, setChapterMap]       = useState<Record<string, Chapter[]>>({});
   const [openSemesters, setOpenSemesters] = useState<Record<string, boolean>>({});
+  const [openSubjects, setOpenSubjects]   = useState<Record<string, boolean>>({});
   const [loading, setLoading]             = useState(false);
   const [refreshing, setRefreshing]       = useState(false);
   const [uploadingId, setUploadingId]     = useState<string | null>(null);
@@ -489,22 +490,28 @@ export default function AdminDashboard() {
                       ) : (
                         semSubs.map((sub) => {
                           const chapters = chapterMap[sub.id] ?? [];
+                          const isSubOpen = !!openSubjects[sub.id];
+                          const toggleSub = () => setOpenSubjects((p) => ({ ...p, [sub.id]: !p[sub.id] }));
                           return (
-                            <View key={sub.id} style={{ width: 280, borderRadius: 10, borderWidth: 1, borderColor: D.border, backgroundColor: D.card2, padding: 12 }}>
+                            <View key={sub.id} style={{ width: 300, borderRadius: 10, borderWidth: 1, borderColor: D.border, backgroundColor: D.card2, overflow: "hidden" }}>
 
-                              {/* Subject Card Header */}
-                              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
+                              {/* Subject Card Header — tap to expand/collapse */}
+                              <TouchableOpacity
+                                onPress={toggleSub}
+                                activeOpacity={0.75}
+                                style={{ flexDirection: "row", alignItems: "flex-start", padding: 12 }}
+                              >
                                 <View style={{ flex: 1, marginRight: 8 }}>
                                   <Text style={{ fontSize: 13, fontWeight: "700", color: D.text }} numberOfLines={1}>{sub.name}</Text>
                                   <Text style={{ fontSize: 11, color: D.muted, marginTop: 2 }}>
                                     {sub.code} · {chapters.length} chapter{chapters.length !== 1 ? "s" : ""}
-                                    {chapters.length === 0 ? " · tap to expand" : ""}
+                                    {!isSubOpen && chapters.length > 0 ? " · tap to expand" : ""}
                                   </Text>
                                 </View>
                                 <View style={{ flexDirection: "row", gap: 6 }}>
                                   {/* + Chapter button */}
                                   <TouchableOpacity
-                                    onPress={() => openChapModal(sub.id, sub.name, chapters.length)}
+                                    onPress={(e) => { (e as any).stopPropagation?.(); openChapModal(sub.id, sub.name, chapters.length); }}
                                     style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: D.primary, borderRadius: 7, paddingHorizontal: 8, paddingVertical: 5 }}
                                   >
                                     <Feather name="plus" size={12} color="#FFFFFF" />
@@ -512,55 +519,57 @@ export default function AdminDashboard() {
                                   </TouchableOpacity>
                                   {/* Delete subject */}
                                   <TouchableOpacity
-                                    onPress={() => delSubject(sub.id, sub.name)}
+                                    onPress={(e) => { (e as any).stopPropagation?.(); delSubject(sub.id, sub.name); }}
                                     style={{ width: 27, height: 27, borderRadius: 7, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.1)" }}
                                   >
                                     <Feather name="trash-2" size={12} color={D.danger} />
                                   </TouchableOpacity>
                                 </View>
-                              </View>
+                              </TouchableOpacity>
 
-                              {/* Chapter Cards — 2-column grid */}
-                              <View style={{ borderTopWidth: 1, borderTopColor: D.border, paddingTop: 8 }}>
-                                {chapters.length === 0 ? (
-                                  <Text style={{ fontSize: 11, color: "#3A4A6B", fontStyle: "italic", textAlign: "center", paddingVertical: 10 }}>
-                                    No chapters yet
-                                  </Text>
-                                ) : (
-                                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                                    {chapters.map((ch) => (
-                                      <View key={ch.id} style={{ width: "47%" as any, borderRadius: 8, borderWidth: 1, borderColor: D.border, backgroundColor: D.card, padding: 8 }}>
-                                        <Text style={{ fontSize: 11, fontWeight: "600", color: D.text, marginBottom: 2, lineHeight: 14 }} numberOfLines={2}>{ch.title}</Text>
-                                        <Text style={{ fontSize: 10, color: D.muted, marginBottom: 7 }}>Order #{ch.orderIndex}</Text>
-                                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                                          {/* HTML upload button */}
-                                          <TouchableOpacity
-                                            onPress={() => handleUploadHtml(ch.id, ch.title, sub.id)}
-                                            disabled={uploadingId === ch.id}
-                                            style={{ flexDirection: "row", alignItems: "center", gap: 3, flex: 1, borderWidth: 1, borderColor: D.border2, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 4 }}
-                                          >
-                                            {uploadingId === ch.id ? (
-                                              <ActivityIndicator size="small" color={D.primary} />
-                                            ) : (
-                                              <>
-                                                <Feather name="upload" size={9} color={D.muted} />
-                                                <Text style={{ fontSize: 9, color: D.muted, fontWeight: "500" }}>HTML upload</Text>
-                                              </>
-                                            )}
-                                          </TouchableOpacity>
-                                          {/* Delete chapter */}
-                                          <TouchableOpacity
-                                            onPress={() => delChapter(ch.id, ch.title, sub.id)}
-                                            style={{ width: 24, height: 24, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.1)" }}
-                                          >
-                                            <Feather name="trash-2" size={11} color={D.danger} />
-                                          </TouchableOpacity>
+                              {/* Chapter Cards — 2-column grid, only when expanded */}
+                              {isSubOpen && (
+                                <View style={{ borderTopWidth: 1, borderTopColor: D.border, padding: 8 }}>
+                                  {chapters.length === 0 ? (
+                                    <Text style={{ fontSize: 11, color: "#3A4A6B", fontStyle: "italic", textAlign: "center", paddingVertical: 10 }}>
+                                      No chapters yet — tap "+ Chapter"
+                                    </Text>
+                                  ) : (
+                                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                                      {chapters.map((ch) => (
+                                        <View key={ch.id} style={{ width: "47%" as any, borderRadius: 8, borderWidth: 1, borderColor: D.border, backgroundColor: D.card, padding: 8 }}>
+                                          <Text style={{ fontSize: 11, fontWeight: "600", color: D.text, marginBottom: 2, lineHeight: 14 }} numberOfLines={2}>{ch.title}</Text>
+                                          <Text style={{ fontSize: 10, color: D.muted, marginBottom: 7 }}>Order #{ch.orderIndex}</Text>
+                                          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                            {/* HTML upload button */}
+                                            <TouchableOpacity
+                                              onPress={() => handleUploadHtml(ch.id, ch.title, sub.id)}
+                                              disabled={uploadingId === ch.id}
+                                              style={{ flexDirection: "row", alignItems: "center", gap: 3, flex: 1, borderWidth: 1, borderColor: D.border2, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 4 }}
+                                            >
+                                              {uploadingId === ch.id ? (
+                                                <ActivityIndicator size="small" color={D.primary} />
+                                              ) : (
+                                                <>
+                                                  <Feather name="upload" size={9} color={D.muted} />
+                                                  <Text style={{ fontSize: 9, color: D.muted, fontWeight: "500" }}>HTML upload</Text>
+                                                </>
+                                              )}
+                                            </TouchableOpacity>
+                                            {/* Delete chapter */}
+                                            <TouchableOpacity
+                                              onPress={() => delChapter(ch.id, ch.title, sub.id)}
+                                              style={{ width: 24, height: 24, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.1)" }}
+                                            >
+                                              <Feather name="trash-2" size={11} color={D.danger} />
+                                            </TouchableOpacity>
+                                          </View>
                                         </View>
-                                      </View>
-                                    ))}
-                                  </View>
-                                )}
-                              </View>
+                                      ))}
+                                    </View>
+                                  )}
+                                </View>
+                              )}
 
                             </View>
                           );
