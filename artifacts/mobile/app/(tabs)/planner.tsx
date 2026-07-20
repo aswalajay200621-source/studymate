@@ -61,8 +61,8 @@ function getFirstDayOffset(year: number, month: number) {
   return d === 0 ? 6 : d - 1;
 }
 
-// ── Today's schedule ─────────────────────────────────────────────────────────
-const SCHEDULE = [
+// ── Today's schedule (default seed) ─────────────────────────────────────────
+const DEFAULT_SCHEDULE = [
   { time: "09:00 — 11:30", title: "Morning Study Session", desc: "Review key concepts and practice problems.", color: C.primary },
   { time: "13:00 — 15:00", title: "Deep Focus Work", desc: "Preparing for upcoming tests. Deep analysis.", color: C.tertiary },
   { time: "16:30 — 18:00", title: "AI Assistant Sync", desc: "Reviewing notes and generating summaries.", color: C.muted },
@@ -90,6 +90,29 @@ export default function PlannerScreen() {
   // Per-date task drafts: key = "YYYY-M-D"
   const [dayTasks, setDayTasks] = useState<Record<string, string>>({});
   const [inputDraft, setInputDraft] = useState("");
+
+  // Today's Schedule state
+  const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
+  const [editingSchedule, setEditingSchedule] = useState(false);
+  const [editDraft, setEditDraft] = useState(DEFAULT_SCHEDULE.map((e) => ({ ...e })));
+
+  const startEditSchedule = () => {
+    setEditDraft(schedule.map((e) => ({ ...e })));
+    setEditingSchedule(true);
+  };
+  const saveSchedule = () => {
+    setSchedule(editDraft.filter((e) => e.title.trim() !== ""));
+    setEditingSchedule(false);
+  };
+  const updateEntry = (idx: number, field: string, val: string) => {
+    setEditDraft((d) => d.map((e, i) => i === idx ? { ...e, [field]: val } : e));
+  };
+  const deleteEntry = (idx: number) => {
+    setEditDraft((d) => d.filter((_, i) => i !== idx));
+  };
+  const addEntry = () => {
+    setEditDraft((d) => [...d, { time: "", title: "", desc: "", color: C.primary }]);
+  };
 
   const daysInMonth = getDaysInMonth(year, month);
   const offset      = getFirstDayOffset(year, month);
@@ -236,25 +259,81 @@ export default function PlannerScreen() {
 
             {/* Today's schedule timeline */}
             <View style={glassCard(s.timelineCard) as any}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <Text style={s.sectionTitle}>Today's Schedule</Text>
-                <Text style={{ fontSize: 13, color: C.muted }}>
-                  {DAYS[(now.getDay() + 6) % 7]}, {MONTHS[now.getMonth()].slice(0, 3)} {today}
-                </Text>
+                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                  <Text style={{ fontSize: 13, color: C.muted }}>
+                    {DAYS[(now.getDay() + 6) % 7]}, {MONTHS[now.getMonth()].slice(0, 3)} {today}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={editingSchedule ? saveSchedule : startEditSchedule}
+                    style={[
+                      s.editBtn,
+                      editingSchedule && { backgroundColor: "rgba(189,194,255,0.15)", borderColor: C.primary },
+                    ]}
+                  >
+                    <Feather name={editingSchedule ? "check" : "edit-2"} size={13} color={editingSchedule ? C.primary : C.muted} />
+                    <Text style={{ fontSize: 12, color: editingSchedule ? C.primary : C.muted, fontWeight: "600" }}>
+                      {editingSchedule ? "Done" : "Edit"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {/* Timeline entries */}
-              <View style={{ paddingLeft: 20, borderLeftWidth: 2, borderLeftColor: "rgba(255,255,255,0.05)" }}>
-                {SCHEDULE.map((entry, idx) => (
-                  <View key={idx} style={{ marginBottom: idx < SCHEDULE.length - 1 ? 28 : 0 }}>
-                    {/* Timeline dot */}
-                    <View style={[s.timelineDot, { backgroundColor: entry.color, borderColor: C.bg }]} />
-                    <Text style={[s.timelineTime, { color: entry.color }]}>{entry.time}</Text>
-                    <Text style={s.timelineTitle}>{entry.title}</Text>
-                    <Text style={s.timelineDesc}>{entry.desc}</Text>
-                  </View>
-                ))}
-              </View>
+              {editingSchedule ? (
+                /* ── Edit mode ── */
+                <View style={{ gap: 16 }}>
+                  {editDraft.map((entry, idx) => (
+                    <View key={idx} style={s.editEntryRow}>
+                      {/* Color strip */}
+                      <View style={{ width: 3, borderRadius: 2, backgroundColor: entry.color, alignSelf: "stretch", marginRight: 10 }} />
+                      <View style={{ flex: 1, gap: 6 }}>
+                        <TextInput
+                          style={s.schedInput}
+                          value={entry.time}
+                          onChangeText={(v) => updateEntry(idx, "time", v)}
+                          placeholder="Time (e.g. 09:00 — 11:00)"
+                          placeholderTextColor="rgba(189,194,255,0.3)"
+                        />
+                        <TextInput
+                          style={[s.schedInput, { fontWeight: "700", color: C.text }]}
+                          value={entry.title}
+                          onChangeText={(v) => updateEntry(idx, "title", v)}
+                          placeholder="Session title"
+                          placeholderTextColor="rgba(189,194,255,0.3)"
+                        />
+                        <TextInput
+                          style={[s.schedInput, { color: C.muted }]}
+                          value={entry.desc}
+                          onChangeText={(v) => updateEntry(idx, "desc", v)}
+                          placeholder="Description"
+                          placeholderTextColor="rgba(189,194,255,0.3)"
+                          multiline
+                        />
+                      </View>
+                      <TouchableOpacity onPress={() => deleteEntry(idx)} style={s.deleteBtn}>
+                        <Feather name="trash-2" size={14} color="rgba(255,100,100,0.7)" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  <TouchableOpacity style={s.addEntryBtn} onPress={addEntry}>
+                    <Feather name="plus" size={14} color={C.primary} />
+                    <Text style={{ fontSize: 12, color: C.primary, fontWeight: "600" }}>Add Entry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* ── Read mode ── */
+                <View style={{ paddingLeft: 20, borderLeftWidth: 2, borderLeftColor: "rgba(255,255,255,0.05)" }}>
+                  {schedule.map((entry, idx) => (
+                    <View key={idx} style={{ marginBottom: idx < schedule.length - 1 ? 28 : 0 }}>
+                      <View style={[s.timelineDot, { backgroundColor: entry.color, borderColor: C.bg }]} />
+                      <Text style={[s.timelineTime, { color: entry.color }]}>{entry.time}</Text>
+                      <Text style={s.timelineTitle}>{entry.title}</Text>
+                      <Text style={s.timelineDesc}>{entry.desc}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
 
@@ -431,6 +510,37 @@ const s = StyleSheet.create({
   sectionTitle:  {
     fontSize: 18, fontWeight: "700", color: C.text,
     fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+  },
+
+  // Schedule edit controls
+  editBtn: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  editEntryRow: {
+    flexDirection: "row", alignItems: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderRadius: 10, padding: 10,
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.07)",
+  },
+  schedInput: {
+    fontSize: 13, color: C.primary, fontWeight: "500",
+    borderBottomWidth: 1, borderBottomColor: "rgba(189,194,255,0.2)",
+    paddingVertical: 4, paddingHorizontal: 0,
+    backgroundColor: "transparent",
+    ...(isWeb ? { outlineStyle: "none" } as any : {}),
+  },
+  deleteBtn: {
+    padding: 6, marginLeft: 6,
+    alignItems: "center", justifyContent: "center",
+  },
+  addEntryBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    paddingVertical: 10, borderRadius: 10,
+    borderWidth: 1, borderColor: "rgba(189,194,255,0.2)",
+    borderStyle: "dashed" as any,
   },
 
   // Widgets
