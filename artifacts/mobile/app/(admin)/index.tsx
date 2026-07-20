@@ -13,7 +13,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -74,95 +73,65 @@ function Constrained({ children, style }: { children: React.ReactNode; style?: a
   if (!isWeb) return <View style={style}>{children}</View>;
   return (
     <View style={[{ width: "100%" as any }, style]}>
-      <View style={{ maxWidth: 860, width: "100%" as any, alignSelf: "center" as any }}>
+      <View style={{ maxWidth: 900, width: "100%" as any, alignSelf: "center" as any }}>
         {children}
       </View>
     </View>
   );
 }
 
-// ─── Stat pill ────────────────────────────────────────────────────────────────
-function StatPill({ value, label }: { value: number | string; label: string }) {
-  const colors = useColors();
-  return (
-    <View style={[s.statPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[s.statValue, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>{value}</Text>
-      <Text style={[s.statLabel, { color: colors.mutedForeground, fontFamily: isWeb ? "'IBM Plex Sans', sans-serif" : "System" }]}>{label}</Text>
-    </View>
-  );
-}
-
-function getLogColor(type: string, colors: any) {
+// ─── Log helpers ──────────────────────────────────────────────────────────────
+function getLogColor(type: string) {
   switch (type) {
-    case "ADMIN_LOGIN":
-    case "LOGIN":
-      return colors.success;
-    case "SIGNUP":
-      return colors.accent;
-    case "SEMESTER_CREATE":
-    case "SUBJECT_CREATE":
-    case "CHAPTER_CREATE":
-      return colors.primary;
-    case "SEMESTER_DELETE":
-    case "SUBJECT_DELETE":
-    case "CHAPTER_DELETE":
-    case "ADMIN_LOGIN_FAIL":
-      return colors.destructive;
-    case "AI_CONVERT":
-      return "#8B5CF6"; // Purple
-    default:
-      return colors.mutedForeground;
+    case "ADMIN_LOGIN": case "LOGIN": return "#22C55E";
+    case "SIGNUP":                    return "#5B6BF8";
+    case "SEMESTER_CREATE": case "SUBJECT_CREATE": case "CHAPTER_CREATE": return "#5B6BF8";
+    case "SEMESTER_DELETE": case "SUBJECT_DELETE": case "CHAPTER_DELETE": case "ADMIN_LOGIN_FAIL": return "#EF4444";
+    case "AI_CONVERT":                return "#8B5CF6";
+    default:                          return "#6B7A99";
   }
 }
-
 function getLogIcon(type: string) {
   switch (type) {
-    case "ADMIN_LOGIN":
-    case "LOGIN":
-      return "log-in";
-    case "SIGNUP":
-      return "user-plus";
-    case "SEMESTER_CREATE":
-    case "SUBJECT_CREATE":
-    case "CHAPTER_CREATE":
-      return "plus-circle";
-    case "SEMESTER_DELETE":
-    case "SUBJECT_DELETE":
-    case "CHAPTER_DELETE":
-      return "trash-2";
-    case "ADMIN_LOGIN_FAIL":
-      return "alert-octagon";
-    case "AI_CONVERT":
-      return "cpu";
-    default:
-      return "activity";
+    case "ADMIN_LOGIN": case "LOGIN": return "log-in";
+    case "SIGNUP":                    return "user-plus";
+    case "SEMESTER_CREATE": case "SUBJECT_CREATE": case "CHAPTER_CREATE": return "plus-circle";
+    case "SEMESTER_DELETE": case "SUBJECT_DELETE": case "CHAPTER_DELETE": return "trash-2";
+    case "ADMIN_LOGIN_FAIL":          return "alert-octagon";
+    case "AI_CONVERT":                return "cpu";
+    default:                          return "activity";
   }
 }
 
-function LogsPanel({ logs, colors }: { logs: any[]; colors: any }) {
+// ─── Live Logs Panel ──────────────────────────────────────────────────────────
+function LogsPanel({ logs }: { logs: any[] }) {
   return (
-    <View style={[s.logsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={{ borderRadius: 12, borderWidth: 1, borderColor: "#1E2535", backgroundColor: "#0F1420", padding: 16 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
-        <Feather name="activity" size={16} color={colors.accent} />
-        <Text style={[s.logsTitle, { color: colors.text }]}>Live Activity Logs</Text>
+        <Feather name="activity" size={16} color="#5B6BF8" />
+        <Text style={{ fontSize: 15, fontWeight: "700", color: "#FFFFFF" }}>Live Activity Logs</Text>
+        <View style={{ marginLeft: "auto" as any, backgroundColor: "#5B6BF820", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+          <Text style={{ fontSize: 10, color: "#5B6BF8", fontWeight: "600" }}>LIVE · 5s</Text>
+        </View>
       </View>
       {logs.length === 0 ? (
-        <View style={{ paddingVertical: 32, alignItems: "center" }}>
-          <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>No activity logged yet.</Text>
+        <View style={{ paddingVertical: 32, alignItems: "center", gap: 8 }}>
+          <Feather name="radio" size={24} color="#2A3448" />
+          <Text style={{ color: "#6B7A99", fontSize: 13 }}>No activity logged yet.</Text>
         </View>
       ) : (
         logs.map((log) => {
-          const logColor = getLogColor(log.type, colors);
+          const logColor = getLogColor(log.type);
           const iconName = getLogIcon(log.type);
-          const timeStr = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          const timeStr = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
           return (
-            <View key={log.id} style={[s.logItem, { borderBottomColor: colors.border }]}>
-              <View style={[s.logBadge, { backgroundColor: logColor + "15" }]}>
+            <View key={log.id} style={{ flexDirection: "row", gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#1E2535" }}>
+              <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: logColor + "20" }}>
                 <Feather name={iconName as any} size={12} color={logColor} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[s.logMsg, { color: colors.text }]}>{log.message}</Text>
-                <Text style={[s.logTime, { color: colors.mutedForeground }]}>{log.type} · {timeStr}</Text>
+                <Text style={{ fontSize: 12, lineHeight: 16, color: "#FFFFFF" }}>{log.message}</Text>
+                <Text style={{ fontSize: 10, marginTop: 2, color: "#6B7A99" }}>{log.type} · {timeStr}</Text>
               </View>
             </View>
           );
@@ -179,23 +148,22 @@ export default function AdminDashboard() {
   const { isDark, toggleTheme } = useApp();
   const insets = useSafeAreaInsets();
   const { adminToken, tokenLoading, loginError, login, adminFetch } = useAdminToken(sessionToken);
-  const { width: windowWidth } = useWindowDimensions();
 
-  const [password, setPassword]         = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [semesters, setSemesters]       = useState<Semester[]>([]);
-  const [subjects, setSubjects]         = useState<Subject[]>([]);
-  const [chapterMap, setChapterMap]     = useState<Record<string, Chapter[]>>({});
+  const [password, setPassword]           = useState("");
+  const [showPassword, setShowPassword]   = useState(false);
+  const [semesters, setSemesters]         = useState<Semester[]>([]);
+  const [subjects, setSubjects]           = useState<Subject[]>([]);
+  const [chapterMap, setChapterMap]       = useState<Record<string, Chapter[]>>({});
   const [openSemesters, setOpenSemesters] = useState<Record<string, boolean>>({});
-  const [loading, setLoading]           = useState(false);
-  const [refreshing, setRefreshing]     = useState(false);
-  const [uploadingId, setUploadingId]   = useState<string | null>(null);
-  const [modal, setModal]               = useState<ModalMode | null>(null);
-  const [saving, setSaving]             = useState(false);
-  const [logs, setLogs]                 = useState<any[]>([]);
+  const [loading, setLoading]             = useState(false);
+  const [refreshing, setRefreshing]       = useState(false);
+  const [uploadingId, setUploadingId]     = useState<string | null>(null);
+  const [modal, setModal]                 = useState<ModalMode | null>(null);
+  const [saving, setSaving]               = useState(false);
+  const [logs, setLogs]                   = useState<any[]>([]);
 
-  const [semForm, setSemForm] = useState({ id: "", name: "", college: "CSE", orderIndex: "1" });
-  const [subForm, setSubForm] = useState({ id: "", name: "", code: "", semester: "1", college: "CSE", description: "", color: "#8B5CF6", icon: "book" });
+  const [semForm, setSemForm]   = useState({ id: "", name: "", college: "CSE", orderIndex: "1" });
+  const [subForm, setSubForm]   = useState({ id: "", name: "", code: "", semester: "1", college: "CSE", description: "", color: "#8B5CF6", icon: "book" });
   const [chapForm, setChapForm] = useState({ id: "", title: "", orderIndex: "1" });
   const [chapHtml, setChapHtml] = useState("");
   const [chapFile, setChapFile] = useState("");
@@ -213,16 +181,12 @@ export default function AdminDashboard() {
 
   const fetchLogs = useCallback(async () => {
     if (!adminToken) return;
-    try {
-      const data = await adminFetch("/admin/logs");
-      setLogs(data ?? []);
-    } catch {}
+    try { const data = await adminFetch("/admin/logs"); setLogs(data ?? []); } catch {}
   }, [adminToken, adminFetch]);
 
   useEffect(() => {
     if (adminToken) {
-      loadData();
-      fetchLogs();
+      loadData(); fetchLogs();
       const interval = setInterval(fetchLogs, 5000);
       return () => clearInterval(interval);
     }
@@ -237,18 +201,14 @@ export default function AdminDashboard() {
     } catch {}
   }, [adminFetch]);
 
-  // ── Toggles ───────────────────────────────────────────────────────────────
+  // ── Toggle semester expand ─────────────────────────────────────────────────
   const toggleSem = useCallback(async (id: string) => {
     const willOpen = !openSemesters[id];
     setOpenSemesters((p) => ({ ...p, [id]: willOpen }));
     if (willOpen) {
-      const sem = semesters.find(s => s.id === id);
+      const sem = semesters.find((s) => s.id === id);
       const semSubs = subjects.filter((sub) => sub.semesterId === id || String(sub.semester) === String(sem?.orderIndex));
-      await Promise.all(semSubs.map(async (sub) => {
-        if (!chapterMap[sub.id]) {
-          await loadChapters(sub.id);
-        }
-      }));
+      await Promise.all(semSubs.map(async (sub) => { if (!chapterMap[sub.id]) await loadChapters(sub.id); }));
     }
   }, [openSemesters, semesters, subjects, chapterMap, loadChapters]);
 
@@ -279,19 +239,9 @@ export default function AdminDashboard() {
   }
 
   // ── Modals ────────────────────────────────────────────────────────────────
-  function openSemModal() {
-    setSemForm({ id: "", name: "", college: "CSE", orderIndex: String(semesters.length + 1) });
-    setModal({ kind: "semester" });
-  }
-  function openSubModal(semId: string, semName: string, semNum: number) {
-    setSubForm({ id: "", name: "", code: "", semester: String(semNum), college: "CSE", description: "", color: "#8B5CF6", icon: "book" });
-    setModal({ kind: "subject", semesterId: semId, semesterName: semName });
-  }
-  function openChapModal(subId: string, subName: string, chapCount: number) {
-    setChapForm({ id: "", title: "", orderIndex: String(chapCount + 1) });
-    setChapHtml(""); setChapFile("");
-    setModal({ kind: "chapter", subjectId: subId, subjectName: subName, chapCount });
-  }
+  function openSemModal() { setSemForm({ id: "", name: "", college: "CSE", orderIndex: String(semesters.length + 1) }); setModal({ kind: "semester" }); }
+  function openSubModal(semId: string, semName: string, semNum: number) { setSubForm({ id: "", name: "", code: "", semester: String(semNum), college: "CSE", description: "", color: "#8B5CF6", icon: "book" }); setModal({ kind: "subject", semesterId: semId, semesterName: semName }); }
+  function openChapModal(subId: string, subName: string, chapCount: number) { setChapForm({ id: "", title: "", orderIndex: String(chapCount + 1) }); setChapHtml(""); setChapFile(""); setModal({ kind: "chapter", subjectId: subId, subjectName: subName, chapCount }); }
 
   // ── Save ──────────────────────────────────────────────────────────────────
   async function handleSave() {
@@ -300,46 +250,16 @@ export default function AdminDashboard() {
     try {
       if (modal.kind === "semester") {
         if (!semForm.id || !semForm.name) throw new Error("ID and Name are required");
-        await adminFetch("/admin/semesters", {
-          method: "POST",
-          body: JSON.stringify({
-            id: semForm.id.trim(),
-            name: semForm.name.trim(),
-            college: semForm.college,
-            orderIndex: Number(semForm.orderIndex) || 0,
-          }),
-        });
+        await adminFetch("/admin/semesters", { method: "POST", body: JSON.stringify({ id: semForm.id.trim(), name: semForm.name.trim(), college: semForm.college, orderIndex: Number(semForm.orderIndex) || 0 }) });
         await loadData();
       } else if (modal.kind === "subject") {
         if (!subForm.id || !subForm.name || !subForm.code) throw new Error("ID, Name and Code are required");
-        await adminFetch("/admin/subjects", {
-          method: "POST",
-          body: JSON.stringify({
-            id: subForm.id.trim(),
-            name: subForm.name.trim(),
-            code: subForm.code.trim().toUpperCase(),
-            semester: Number(subForm.semester) || 1,
-            semesterId: modal.semesterId,
-            college: subForm.college,
-            description: subForm.description,
-            color: subForm.color,
-            icon: subForm.icon,
-          }),
-        });
+        await adminFetch("/admin/subjects", { method: "POST", body: JSON.stringify({ id: subForm.id.trim(), name: subForm.name.trim(), code: subForm.code.trim().toUpperCase(), semester: Number(subForm.semester) || 1, semesterId: modal.semesterId, college: subForm.college, description: subForm.description, color: subForm.color, icon: subForm.icon }) });
         await loadData();
       } else {
         if (!chapForm.title) throw new Error("Chapter title is required");
         const id = chapForm.id.trim() || `chap-${Date.now()}`;
-        await adminFetch("/admin/chapters", {
-          method: "POST",
-          body: JSON.stringify({
-            id,
-            subjectId: modal.subjectId,
-            title: chapForm.title.trim(),
-            orderIndex: Number(chapForm.orderIndex) || 0,
-            ...(chapHtml ? { contentHtml: chapHtml } : {}),
-          }),
-        });
+        await adminFetch("/admin/chapters", { method: "POST", body: JSON.stringify({ id, subjectId: modal.subjectId, title: chapForm.title.trim(), orderIndex: Number(chapForm.orderIndex) || 0, ...(chapHtml ? { contentHtml: chapHtml } : {}) }) });
         await loadChapters(modal.subjectId);
       }
       setModal(null);
@@ -373,14 +293,13 @@ export default function AdminDashboard() {
   const botPad = Platform.OS === "web" ? 0 : insets.bottom;
 
   // ─────────────────────────────────────────────────────────────────────────
-  // LOGIN SCREEN
+  // LOGIN SCREEN (unchanged look)
   // ─────────────────────────────────────────────────────────────────────────
   if (!adminToken) {
     return (
       <View style={[s.root, { backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }} keyboardShouldPersistTaps="handled">
           <Constrained>
-            {/* Logo */}
             <View style={{ alignItems: "center", marginBottom: 32 }}>
               <View style={[s.loginLogoBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 <Text style={{ fontSize: 28 }}>📚</Text>
@@ -394,14 +313,10 @@ export default function AdminDashboard() {
               <View style={s.pwRow}>
                 <TextInput
                   style={[s.input, { flex: 1, color: colors.text, borderColor: colors.border, backgroundColor: colors.input }]}
-                  placeholder="Admin password"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  onSubmitEditing={() => password && login(password)}
-                  returnKeyType="go"
+                  placeholder="Admin password" placeholderTextColor={colors.mutedForeground}
+                  value={password} onChangeText={setPassword}
+                  secureTextEntry={!showPassword} autoCapitalize="none"
+                  onSubmitEditing={() => password && login(password)} returnKeyType="go"
                 />
                 <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={[s.eyeBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                   <Feather name={showPassword ? "eye-off" : "eye"} size={18} color={colors.accent} />
@@ -415,12 +330,8 @@ export default function AdminDashboard() {
                 </View>
               )}
 
-              <TouchableOpacity
-                onPress={() => password && login(password)}
-                disabled={tokenLoading || !password}
-                activeOpacity={0.85}
-                style={[s.primaryBtn, { marginTop: 12 }, (!password || tokenLoading) && { opacity: 0.5 }]}
-              >
+              <TouchableOpacity onPress={() => password && login(password)} disabled={tokenLoading || !password} activeOpacity={0.85}
+                style={[s.primaryBtn, { marginTop: 12 }, (!password || tokenLoading) && { opacity: 0.5 }]}>
                 <LinearGradient colors={[colors.primary, colors.tint]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.primaryBtnGrad}>
                   {tokenLoading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[s.primaryBtnText, { color: colors.primaryForeground }]}>Unlock Admin Panel</Text>}
                 </LinearGradient>
@@ -438,225 +349,237 @@ export default function AdminDashboard() {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // DASHBOARD
+  // DASHBOARD  — dark design matching screenshot
   // ─────────────────────────────────────────────────────────────────────────
+  // Design tokens (always dark, regardless of app theme)
+  const D = {
+    bg:      "#0B0F1A",
+    card:    "#0F1420",
+    card2:   "#161D2F",
+    border:  "#1E2535",
+    border2: "#2A3448",
+    text:    "#FFFFFF",
+    muted:   "#6B7A99",
+    primary: "#5B6BF8",
+    danger:  "#EF4444",
+  };
+
   const totalChapters = Object.values(chapterMap).reduce((a, c) => a + c.length, 0);
-  const isWide = isWeb && windowWidth > 960;
 
   return (
-    <View style={[s.root, { backgroundColor: colors.background }]}>
-      <View style={{ flex: 1, flexDirection: isWide ? "row" : "column" }}>
-        
-        {/* Main Content Pane */}
-        <ScrollView
-          style={{ flex: isWide ? 7 : 1 }}
-          contentContainerStyle={{ paddingBottom: botPad + 80 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* ── Header ── */}
-          <View style={[s.header, { paddingTop: topPad + (isWeb ? 24 : 48), borderBottomColor: colors.border, borderBottomWidth: 1, backgroundColor: colors.card }]}>
-            <Constrained style={{ paddingHorizontal: 20 }}>
-              <View style={s.headerRow}>
-                <View style={s.headerLeft}>
-                  <View style={[s.headerLogoBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-                    <Text style={{ fontSize: 16 }}>📚</Text>
-                  </View>
-                  <Text style={[s.headerTitle, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>StudyMate Admin</Text>
-                </View>
-                
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  {/* Theme Toggle option */}
-                  <TouchableOpacity
-                    onPress={toggleTheme}
-                    style={[s.themeBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-                  >
-                    <Feather name={isDark ? "sun" : "moon"} size={14} color={colors.text} />
-                  </TouchableOpacity>
+    <View style={[s.root, { backgroundColor: D.bg }]}>
 
-                  <TouchableOpacity onPress={handleSignOut} style={[s.signOutBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-                    <Feather name="log-out" size={13} color={colors.destructive} />
-                    <Text style={[s.signOutText, { color: colors.destructive }]}>Sign Out</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Stats */}
-              <View style={s.statsRow}>
-                <StatPill value={semesters.length} label="Semesters" />
-                <StatPill value={subjects.length} label="Subjects" />
-                <StatPill value={totalChapters} label="Chapters" />
-              </View>
-            </Constrained>
-          </View>
-
-          {/* ── Content tree ── */}
-          <Constrained style={{ paddingHorizontal: 20, paddingTop: 24 }}>
-            {/* Section header */}
-            <View style={s.sectionHeader}>
-              <Text style={[s.sectionTitle, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>Shelf Directory</Text>
-              <TouchableOpacity onPress={openSemModal} style={[s.addBtn, { backgroundColor: colors.primary }]}>
-                <Feather name="plus" size={14} color={colors.primaryForeground} />
-                <Text style={[s.addBtnText, { color: colors.primaryForeground }]}>New Semester</Text>
+      {/* ── Header ── */}
+      <View style={{ paddingTop: topPad + (isWeb ? 0 : 44), backgroundColor: D.card, borderBottomWidth: 1, borderBottomColor: D.border }}>
+        <Constrained>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 14 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: D.text }}>
+              <Text style={{ color: D.primary }}>StudyMate</Text>{" Admin"}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <TouchableOpacity onPress={toggleTheme} style={{ width: 36, height: 36, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: "#1A2030", borderWidth: 1, borderColor: D.border2 }}>
+                <Feather name={isDark ? "sun" : "moon"} size={15} color={D.muted} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleSignOut} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 9, borderWidth: 1, borderColor: D.border2, backgroundColor: "#1A2030" }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: D.text }}>Sign Out</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </Constrained>
+      </View>
 
-            {loading ? (
-              <View style={{ alignItems: "center", paddingVertical: 60 }}>
-                <ActivityIndicator color={colors.accent} size="large" />
-              </View>
-            ) : semesters.length === 0 ? (
-              <View style={[s.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <Feather name="layers" size={32} color={colors.mutedForeground} />
-                <Text style={[s.emptyTitle, { color: colors.text }]}>No semesters shelf yet</Text>
-                <Text style={[s.emptyText, { color: colors.mutedForeground }]}>Tap "New Semester" above to get started</Text>
-              </View>
-            ) : (
-              semesters.map((sem) => {
-                const semSubs = subjects.filter((sub) => sub.semesterId === sem.id || String(sub.semester) === String(sem.orderIndex));
-                const isOpen = !!openSemesters[sem.id];
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: botPad + 80 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={D.primary} />}
+        showsVerticalScrollIndicator={false}
+      >
+        <Constrained style={{ paddingHorizontal: 16 }}>
 
-                return (
-                  <View key={sem.id} style={[s.semBlock, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    {/* ── Semester row ── */}
-                    <View style={s.semRow}>
-                      <TouchableOpacity onPress={() => toggleSem(sem.id)} style={s.semToggle} activeOpacity={0.7}>
-                        <Feather name={isOpen ? "chevron-down" : "chevron-right"} size={16} color={colors.accent} />
-                        <View style={[s.semIconBox, { backgroundColor: colors.secondary }]}>
-                          <Feather name="layers" size={14} color={colors.accent} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[s.semName, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]}>{sem.name}</Text>
-                          <Text style={[s.semMeta, { color: colors.mutedForeground }]}>{sem.college} · {semSubs.length} subject{semSubs.length !== 1 ? "s" : ""}</Text>
-                        </View>
+          {/* ── Stats Row ── */}
+          <View style={{ marginTop: 16, flexDirection: "row", borderRadius: 12, borderWidth: 1, borderColor: D.border, backgroundColor: D.card, overflow: "hidden" }}>
+            {([
+              { value: semesters.length, label: "Semesters", barW: 60 },
+              { value: subjects.length,  label: "Subjects",  barW: 60 },
+              { value: totalChapters,    label: "Chapters",  barW: 44 },
+            ] as { value: number; label: string; barW: number }[]).map((stat, i) => (
+              <React.Fragment key={stat.label}>
+                {i > 0 && <View style={{ width: 1, backgroundColor: D.border, alignSelf: "stretch" as any }} />}
+                <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 18 }}>
+                  <Text style={{ fontSize: 26, fontWeight: "700", color: D.text }}>{stat.value}</Text>
+                  <Text style={{ fontSize: 13, color: D.muted, marginBottom: 8 }}>{stat.label}</Text>
+                  <View style={{ height: 2, width: stat.barW, borderRadius: 1, backgroundColor: D.primary }} />
+                </View>
+              </React.Fragment>
+            ))}
+          </View>
+
+          {/* ── Shelf Directory Header ── */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 24, marginBottom: 14 }}>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: D.text }}>Shelf Directory</Text>
+            <TouchableOpacity onPress={openSemModal} style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: D.primary, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 }}>
+              <Feather name="plus" size={14} color="#FFFFFF" />
+              <Text style={{ fontSize: 13, fontWeight: "600", color: "#FFFFFF" }}>New Semester</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Semesters List (vertical scroll) ── */}
+          {loading ? (
+            <View style={{ alignItems: "center", paddingVertical: 60 }}>
+              <ActivityIndicator color={D.primary} size="large" />
+            </View>
+          ) : semesters.length === 0 ? (
+            <View style={{ alignItems: "center", paddingVertical: 52, gap: 10, borderRadius: 12, borderWidth: 1, borderColor: D.border, backgroundColor: D.card }}>
+              <Feather name="layers" size={32} color={D.muted} />
+              <Text style={{ fontSize: 16, fontWeight: "600", color: D.text }}>No semesters yet</Text>
+              <Text style={{ fontSize: 13, color: D.muted, textAlign: "center" }}>Tap "New Semester" above to get started</Text>
+            </View>
+          ) : (
+            semesters.map((sem) => {
+              const semSubs = subjects.filter(
+                (sub) => sub.semesterId === sem.id || String(sub.semester) === String(sem.orderIndex)
+              );
+              const isOpen = !!openSemesters[sem.id];
+
+              return (
+                <View key={sem.id} style={{ borderRadius: 12, borderWidth: 1, borderColor: D.border, backgroundColor: D.card, marginBottom: 12, overflow: "hidden" }}>
+
+                  {/* Semester Header Row — tap to expand/collapse */}
+                  <TouchableOpacity
+                    onPress={() => toggleSem(sem.id)}
+                    activeOpacity={0.8}
+                    style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 16 }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 16, fontWeight: "700", color: D.text }}>{sem.name}</Text>
+                      <Text style={{ fontSize: 12, color: D.muted, marginTop: 2 }}>
+                        {sem.college} · {semSubs.length} subject{semSubs.length !== 1 ? "s" : ""}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      {/* + Subject button */}
+                      <TouchableOpacity
+                        onPress={(e) => { (e as any).stopPropagation?.(); openSubModal(sem.id, sem.name, sem.orderIndex); }}
+                        style={{ flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: D.primary, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 }}
+                      >
+                        <Feather name="plus" size={13} color="#FFFFFF" />
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: "#FFFFFF" }}>Subject</Text>
                       </TouchableOpacity>
-
-                      <TouchableOpacity onPress={() => openSubModal(sem.id, sem.name, sem.orderIndex)} style={[s.inlineActionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-                        <Feather name="plus" size={12} color={colors.text} />
-                        <Text style={[s.inlineActionText, { color: colors.text }]}>Subject</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => delSemester(sem.id, sem.name)} style={s.inlineDeleteBtn}>
-                        <Feather name="trash-2" size={13} color={colors.destructive} />
+                      {/* Delete semester */}
+                      <TouchableOpacity
+                        onPress={(e) => { (e as any).stopPropagation?.(); delSemester(sem.id, sem.name); }}
+                        style={{ width: 30, height: 30, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.1)" }}
+                      >
+                        <Feather name="trash-2" size={13} color={D.danger} />
                       </TouchableOpacity>
                     </View>
+                  </TouchableOpacity>
 
-                    {/* ── Subjects (Horizontal scroll under Semester) ── */}
-                    {isOpen && (
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 14, gap: 14 }}
-                        style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }}
-                      >
-                        {semSubs.length === 0 ? (
-                          <View style={s.innerEmpty}>
-                            <Feather name="book" size={14} color={colors.mutedForeground} />
-                            <Text style={[s.innerEmptyText, { color: colors.mutedForeground }]}>No subjects — tap "+ Subject" to add</Text>
-                          </View>
-                        ) : (
-                          semSubs.map((sub) => {
-                            const chapters = chapterMap[sub.id] ?? [];
-                            const subIndicatorColor = sub.college === "CSE" ? colors.cseColor : colors.eeeColor;
+                  {/* Subjects — horizontal scroll */}
+                  {isOpen && (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 16, paddingTop: 12, gap: 12 }}
+                      style={{ borderTopWidth: 1, borderTopColor: D.border }}
+                    >
+                      {semSubs.length === 0 ? (
+                        <View style={{ paddingVertical: 20, paddingHorizontal: 4 }}>
+                          <Text style={{ color: D.muted, fontSize: 13 }}>No subjects — tap "+ Subject" to add</Text>
+                        </View>
+                      ) : (
+                        semSubs.map((sub) => {
+                          const chapters = chapterMap[sub.id] ?? [];
+                          return (
+                            <View key={sub.id} style={{ width: 280, borderRadius: 10, borderWidth: 1, borderColor: D.border, backgroundColor: D.card2, padding: 12 }}>
 
-                            return (
-                              <View key={sub.id} style={[s.subjectCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                                {/* Subject Card Header */}
-                                <View style={s.subjectCardHeader}>
-                                  <View style={{ flex: 1, marginRight: 6 }}>
-                                    <Text style={[s.subjectCardTitle, { color: colors.text }]} numberOfLines={1}>
-                                      {sub.name}
-                                    </Text>
-                                    <Text style={[s.subjectCardCode, { color: subIndicatorColor }]}>
-                                      {sub.code} · {chapters.length} chapter{chapters.length !== 1 ? "s" : ""}
-                                    </Text>
-                                  </View>
-                                  <View style={{ flexDirection: "row", gap: 4 }}>
-                                    <TouchableOpacity onPress={() => openChapModal(sub.id, sub.name, chapters.length)} style={[s.inlineActionBtn, { backgroundColor: colors.secondary, borderColor: colors.border, marginLeft: 0, paddingHorizontal: 6, paddingVertical: 4 }]}>
-                                      <Feather name="plus" size={11} color={colors.text} />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => delSubject(sub.id, sub.name)} style={[s.inlineDeleteBtn, { marginLeft: 0, padding: 5 }]}>
-                                      <Feather name="trash-2" size={11} color={colors.destructive} />
-                                    </TouchableOpacity>
-                                  </View>
-                                </View>
-
-                                {/* Description */}
-                                {!!sub.description && (
-                                  <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 8 }} numberOfLines={2}>
-                                    {sub.description}
+                              {/* Subject Card Header */}
+                              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 10 }}>
+                                <View style={{ flex: 1, marginRight: 8 }}>
+                                  <Text style={{ fontSize: 13, fontWeight: "700", color: D.text }} numberOfLines={1}>{sub.name}</Text>
+                                  <Text style={{ fontSize: 11, color: D.muted, marginTop: 2 }}>
+                                    {sub.code} · {chapters.length} chapter{chapters.length !== 1 ? "s" : ""}
+                                    {chapters.length === 0 ? " · tap to expand" : ""}
                                   </Text>
-                                )}
+                                </View>
+                                <View style={{ flexDirection: "row", gap: 6 }}>
+                                  {/* + Chapter button */}
+                                  <TouchableOpacity
+                                    onPress={() => openChapModal(sub.id, sub.name, chapters.length)}
+                                    style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: D.primary, borderRadius: 7, paddingHorizontal: 8, paddingVertical: 5 }}
+                                  >
+                                    <Feather name="plus" size={12} color="#FFFFFF" />
+                                    <Text style={{ fontSize: 11, fontWeight: "600", color: "#FFFFFF" }}>Chapter</Text>
+                                  </TouchableOpacity>
+                                  {/* Delete subject */}
+                                  <TouchableOpacity
+                                    onPress={() => delSubject(sub.id, sub.name)}
+                                    style={{ width: 27, height: 27, borderRadius: 7, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.1)" }}
+                                  >
+                                    <Feather name="trash-2" size={12} color={D.danger} />
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
 
-                                {/* Chapters vertical list inside card */}
-                                <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, gap: 8 }}>
-                                  {chapters.length === 0 ? (
-                                    <Text style={{ fontSize: 11, color: colors.mutedForeground, fontStyle: "italic", textAlign: "center", paddingVertical: 8 }}>
-                                      No chapters yet
-                                    </Text>
-                                  ) : (
-                                    chapters.map((ch) => (
-                                      <View key={ch.id} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 }}>
-                                        <View style={{ flex: 1, marginRight: 6 }}>
-                                          <Text style={{ fontSize: 12, fontWeight: "500", color: colors.text }} numberOfLines={1}>
-                                            {ch.title}
-                                          </Text>
-                                          <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
-                                            Order #{ch.orderIndex}
-                                          </Text>
-                                        </View>
+                              {/* Chapter Cards — 2-column grid */}
+                              <View style={{ borderTopWidth: 1, borderTopColor: D.border, paddingTop: 8 }}>
+                                {chapters.length === 0 ? (
+                                  <Text style={{ fontSize: 11, color: "#3A4A6B", fontStyle: "italic", textAlign: "center", paddingVertical: 10 }}>
+                                    No chapters yet
+                                  </Text>
+                                ) : (
+                                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                                    {chapters.map((ch) => (
+                                      <View key={ch.id} style={{ width: "47%" as any, borderRadius: 8, borderWidth: 1, borderColor: D.border, backgroundColor: D.card, padding: 8 }}>
+                                        <Text style={{ fontSize: 11, fontWeight: "600", color: D.text, marginBottom: 2, lineHeight: 14 }} numberOfLines={2}>{ch.title}</Text>
+                                        <Text style={{ fontSize: 10, color: D.muted, marginBottom: 7 }}>Order #{ch.orderIndex}</Text>
                                         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                          {/* HTML upload button */}
                                           <TouchableOpacity
                                             onPress={() => handleUploadHtml(ch.id, ch.title, sub.id)}
-                                            style={[s.uploadBtn, { backgroundColor: colors.secondary, borderColor: colors.border, paddingHorizontal: 6, paddingVertical: 4, marginLeft: 0 }]}
                                             disabled={uploadingId === ch.id}
+                                            style={{ flexDirection: "row", alignItems: "center", gap: 3, flex: 1, borderWidth: 1, borderColor: D.border2, borderRadius: 5, paddingHorizontal: 5, paddingVertical: 4 }}
                                           >
                                             {uploadingId === ch.id ? (
-                                              <ActivityIndicator size="small" color={colors.accent} />
+                                              <ActivityIndicator size="small" color={D.primary} />
                                             ) : (
                                               <>
-                                                <Feather name="upload" size={10} color={colors.text} />
-                                                <Text style={{ fontSize: 10, fontWeight: "600", color: colors.text }}>HTML</Text>
+                                                <Feather name="upload" size={9} color={D.muted} />
+                                                <Text style={{ fontSize: 9, color: D.muted, fontWeight: "500" }}>HTML upload</Text>
                                               </>
                                             )}
                                           </TouchableOpacity>
-                                          <TouchableOpacity onPress={() => delChapter(ch.id, ch.title, sub.id)} style={[s.inlineDeleteBtn, { marginLeft: 0, padding: 5 }]}>
-                                            <Feather name="trash-2" size={10} color={colors.destructive} />
+                                          {/* Delete chapter */}
+                                          <TouchableOpacity
+                                            onPress={() => delChapter(ch.id, ch.title, sub.id)}
+                                            style={{ width: 24, height: 24, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.1)" }}
+                                          >
+                                            <Feather name="trash-2" size={11} color={D.danger} />
                                           </TouchableOpacity>
                                         </View>
                                       </View>
-                                    ))
-                                  )}
-                                </View>
+                                    ))}
+                                  </View>
+                                )}
                               </View>
-                            );
-                          })
-                        )}
-                      </ScrollView>
-                    )}
-                  </View>
-                );
-              })
-            )}
-          </Constrained>
 
-          {/* Stacked Logs for mobile */}
-          {!isWide && (
-            <Constrained style={{ paddingHorizontal: 20, paddingTop: 24 }}>
-              <LogsPanel logs={logs} colors={colors} />
-            </Constrained>
+                            </View>
+                          );
+                        })
+                      )}
+                    </ScrollView>
+                  )}
+                </View>
+              );
+            })
           )}
-        </ScrollView>
 
-        {/* Desktop Sidebar Logs panel */}
-        {isWide && (
-          <View style={{ flex: 3, borderLeftWidth: 1, borderLeftColor: colors.border, backgroundColor: colors.card, paddingTop: topPad + (isWeb ? 24 : 48) }}>
-            <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: botPad + 80 }} showsVerticalScrollIndicator={false}>
-              <LogsPanel logs={logs} colors={colors} />
-            </ScrollView>
+          {/* ── Live Logs ── */}
+          <View style={{ marginTop: 24, marginBottom: 8 }}>
+            <LogsPanel logs={logs} />
           </View>
-        )}
 
-      </View>
+        </Constrained>
+      </ScrollView>
 
       {/* ── Modal ── */}
       <Modal visible={!!modal} animationType="slide" transparent onRequestClose={() => setModal(null)}>
@@ -664,15 +587,14 @@ export default function AdminDashboard() {
           <View style={[
             s.modalBox,
             { backgroundColor: colors.card, borderColor: colors.border },
-            isWeb ? { maxWidth: 520, width: "100%" as any, alignSelf: "center" as any, borderRadius: 20, marginBottom: 40 } as any : {}
+            isWeb ? { maxWidth: 520, width: "100%" as any, alignSelf: "center" as any, borderRadius: 20, marginBottom: 40 } as any : {},
           ]}>
-            {/* Modal header */}
             <View style={s.modalHeader}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
                 <View style={[s.modalIconBox, { backgroundColor: colors.secondary }]}>
                   <Feather name={modal?.kind === "semester" ? "layers" : modal?.kind === "subject" ? "book" : "file-text"} size={16} color={colors.accent} />
                 </View>
-                <Text style={[s.modalTitle, { color: colors.text, fontFamily: isWeb ? "'Playfair Display', serif" : "System" }]} numberOfLines={1}>
+                <Text style={[s.modalTitle, { color: colors.text }]} numberOfLines={1}>
                   {modal?.kind === "semester" && "New Semester"}
                   {modal?.kind === "subject" && `New Subject — ${(modal as any).semesterName}`}
                   {modal?.kind === "chapter" && `New Chapter — ${(modal as any).subjectName}`}
@@ -684,8 +606,6 @@ export default function AdminDashboard() {
             </View>
 
             <ScrollView style={{ maxHeight: 440 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
-              {/* ── Semester form ── */}
               {modal?.kind === "semester" && (
                 <>
                   <MField label="ID (slug) *" placeholder="e.g. sem-1-cse" value={semForm.id} onChange={(v) => setSemForm((f) => ({ ...f, id: v }))} />
@@ -694,8 +614,6 @@ export default function AdminDashboard() {
                   <MField label="Order Index" placeholder="1" value={semForm.orderIndex} onChange={(v) => setSemForm((f) => ({ ...f, orderIndex: v }))} keyboardType="numeric" />
                 </>
               )}
-
-              {/* ── Subject form ── */}
               {modal?.kind === "subject" && (
                 <>
                   <MField label="Subject ID (slug) *" placeholder="e.g. maths-1" value={subForm.id} onChange={(v) => setSubForm((f) => ({ ...f, id: v }))} />
@@ -708,8 +626,6 @@ export default function AdminDashboard() {
                   <MField label="Icon (Feather name)" placeholder="book" value={subForm.icon} onChange={(v) => setSubForm((f) => ({ ...f, icon: v }))} />
                 </>
               )}
-
-              {/* ── Chapter form ── */}
               {modal?.kind === "chapter" && (
                 <>
                   <MField label="Chapter Title *" placeholder="e.g. Introduction to Matrices" value={chapForm.title} onChange={(v) => setChapForm((f) => ({ ...f, title: v }))} />
@@ -762,12 +678,9 @@ function MField({ label, placeholder, value, onChange, keyboardType }: {
       <Text style={[s.label, { color: colors.mutedForeground }]}>{label}</Text>
       <TextInput
         style={[s.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.input }]}
-        placeholder={placeholder}
-        placeholderTextColor={colors.mutedForeground}
-        value={value}
-        onChangeText={onChange}
-        keyboardType={keyboardType ?? "default"}
-        autoCapitalize="none"
+        placeholder={placeholder} placeholderTextColor={colors.mutedForeground}
+        value={value} onChangeText={onChange}
+        keyboardType={keyboardType ?? "default"} autoCapitalize="none"
       />
     </View>
   );
@@ -783,7 +696,8 @@ function SegmentControl({ label, options, value, onChange }: {
       <Text style={[s.label, { color: colors.mutedForeground }]}>{label}</Text>
       <View style={s.segRow}>
         {options.map((o) => (
-          <TouchableOpacity key={o} onPress={() => onChange(o)} style={[s.segBtn, { backgroundColor: colors.input, borderColor: colors.border }, value === o && { backgroundColor: colors.secondary, borderColor: colors.accent }]}>
+          <TouchableOpacity key={o} onPress={() => onChange(o)}
+            style={[s.segBtn, { backgroundColor: colors.input, borderColor: colors.border }, value === o && { backgroundColor: colors.secondary, borderColor: colors.accent }]}>
             <Text style={[s.segBtnText, { color: colors.mutedForeground }, value === o && { color: colors.text }]}>{o}</Text>
           </TouchableOpacity>
         ))}
@@ -794,127 +708,30 @@ function SegmentControl({ label, options, value, onChange }: {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root:           { flex: 1 },
-
-  // header
-  header:         { paddingBottom: 20 },
-  headerRow:      { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
-  headerLeft:     { flexDirection: "row", alignItems: "center", gap: 10 },
-  headerLogoBox:  { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center", borderWidth: 1 },
-  headerTitle:    { fontSize: 18, fontWeight: "700" },
-  signOutBtn:     { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
-  signOutText:    { fontSize: 13, fontWeight: "600" },
-  themeBtn:       { width: 34, height: 34, borderRadius: 8, alignItems: "center", justifyContent: "center", borderWidth: 1 },
-  statsRow:       { flexDirection: "row", gap: 10 },
-  statPill:       { flex: 1, borderRadius: 10, paddingVertical: 14, alignItems: "center", borderWidth: 1 },
-  statValue:      { fontSize: 22, fontWeight: "700" },
-  statLabel:      { fontSize: 11, marginTop: 2 },
-
-  // section
-  sectionHeader:  { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
-  sectionTitle:   { fontSize: 17, fontWeight: "700" },
-  addBtn:         { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  addBtnText:     { fontSize: 13, fontWeight: "600" },
-
-  // empty
-  emptyCard:      { alignItems: "center", paddingVertical: 52, gap: 10, marginTop: 8, borderRadius: 10, borderWidth: 1 },
-  emptyTitle:     { fontSize: 16, fontWeight: "600" },
-  emptyText:      { fontSize: 13, textAlign: "center" },
-  innerEmpty:     { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, paddingHorizontal: 16 },
-  innerEmptyText: { fontSize: 13 },
-
-  // semester block
-  semBlock:       { borderRadius: 10, borderWidth: 1, marginBottom: 10, overflow: "hidden" },
-  semRow:         { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14 },
-  semToggle:      { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minWidth: 0 },
-  semIconBox:     { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  semName:        { fontSize: 14, fontWeight: "600" },
-  semMeta:        { fontSize: 11, marginTop: 1 },
-
-  // subject block (new card style)
-  subjectCard: {
-    width: 320,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-  },
-  subjectCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
-  },
-  subjectCardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    flex: 1,
-  },
-  subjectCardCode: {
-    fontSize: 11,
-    marginTop: 1,
-  },
-
-  // logs card (new logs style)
-  logsCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 16,
-  },
-  logsTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  logItem: {
-    flexDirection: "row",
-    gap: 10,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  logBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logMsg: {
-    fontSize: 12,
-    lineHeight: 16,
-    flex: 1,
-  },
-  logTime: {
-    fontSize: 10,
-    marginTop: 2,
-  },
-
-  // inline action buttons
-  inlineActionBtn:{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6, marginLeft: 6, borderWidth: 1, flexShrink: 0 },
-  inlineActionText:{ fontSize: 11, fontWeight: "600" },
-  inlineDeleteBtn:{ padding: 7, backgroundColor: "rgba(239,68,68,0.08)", borderRadius: 8, marginLeft: 5, flexShrink: 0 },
-  uploadBtn:      { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 7, paddingHorizontal: 8, paddingVertical: 5, marginLeft: 6, borderWidth: 1, flexShrink: 0 },
+  root: { flex: 1 },
 
   // modal
-  modalOverlay:   { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
-  modalBox:       { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32, borderTopWidth: 1 },
-  modalHeader:    { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
-  modalIconBox:   { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  modalTitle:     { fontSize: 16, fontWeight: "700", flex: 1 },
-  modalCloseBtn:  { padding: 6, borderRadius: 8 },
+  modalOverlay:    { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },
+  modalBox:        { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32, borderTopWidth: 1 },
+  modalHeader:     { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
+  modalIconBox:    { width: 32, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  modalTitle:      { fontSize: 16, fontWeight: "700", flex: 1 },
+  modalCloseBtn:   { padding: 6, borderRadius: 8 },
 
   // form
-  label:          { fontSize: 11, fontWeight: "600", letterSpacing: 0.5, marginBottom: 6 },
-  input:          { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14 },
-  pwRow:          { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
-  eyeBtn:         { padding: 13, borderRadius: 10, borderWidth: 1 },
-  errorBox:       { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(239,68,68,0.06)", borderRadius: 10, padding: 12, marginBottom: 12 },
-  errorText:      { fontSize: 13, flex: 1 },
-  segRow:         { flexDirection: "row", gap: 8 },
-  segBtn:         { flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 10, borderWidth: 1 },
-  segBtnText:     { fontSize: 14, fontWeight: "600" },
-  htmlPickerBtn:  { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 8 },
-  htmlPickerText: { fontSize: 14, fontWeight: "500", flex: 1 },
-  htmlFileTag:    { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 8 },
-  htmlFileTagText:{ flex: 1, fontSize: 12, fontWeight: "500" },
+  label:           { fontSize: 11, fontWeight: "600", letterSpacing: 0.5, marginBottom: 6 },
+  input:           { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14 },
+  pwRow:           { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
+  eyeBtn:          { padding: 13, borderRadius: 10, borderWidth: 1 },
+  errorBox:        { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(239,68,68,0.06)", borderRadius: 10, padding: 12, marginBottom: 12 },
+  errorText:       { fontSize: 13, flex: 1 },
+  segRow:          { flexDirection: "row", gap: 8 },
+  segBtn:          { flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 10, borderWidth: 1 },
+  segBtnText:      { fontSize: 14, fontWeight: "600" },
+  htmlPickerBtn:   { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 8 },
+  htmlPickerText:  { fontSize: 14, fontWeight: "500", flex: 1 },
+  htmlFileTag:     { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 8 },
+  htmlFileTagText: { flex: 1, fontSize: 12, fontWeight: "500" },
 
   // buttons
   primaryBtn:     { borderRadius: 10, overflow: "hidden" },
@@ -924,8 +741,8 @@ const s = StyleSheet.create({
   backLinkText:   { fontSize: 14 },
 
   // login
-  loginLogoBox:   { width: 72, height: 72, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
-  loginTitle:     { fontSize: 26, fontWeight: "700", marginBottom: 6 },
-  loginSub:       { fontSize: 14, textAlign: "center" },
-  formCard:       { borderRadius: 10, borderWidth: 1, padding: 24 },
+  loginLogoBox: { width: 72, height: 72, borderRadius: 20, borderWidth: 1, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  loginTitle:   { fontSize: 26, fontWeight: "700", marginBottom: 6 },
+  loginSub:     { fontSize: 14, textAlign: "center" },
+  formCard:     { borderRadius: 10, borderWidth: 1, padding: 24 },
 });
