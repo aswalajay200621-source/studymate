@@ -7,6 +7,7 @@ import {
   chaptersTable, insertChapterSchema,
 } from "@workspace/db";
 import { signToken, verifyToken, extractBearer } from "../lib/token";
+import { addLog, getLogs } from "../lib/liveLogger";
 
 const router = Router();
 
@@ -21,8 +22,10 @@ router.post("/admin/login", (req, res) => {
   const allowedUsernames = ["HAPPINESSAB", "happinessab2025@gmail.com"];
   if (username && allowedUsernames.includes(username) && password === ADMIN_PASSWORD) {
     const token = signToken({ role: "admin", sub: "admin" });
+    addLog("ADMIN_LOGIN", "Admin logged in successfully");
     res.json({ token });
   } else {
+    addLog("ADMIN_LOGIN_FAIL", `Admin login attempt failed for user: ${username}`);
     res.status(401).json({ error: "Invalid credentials" });
   }
 });
@@ -37,6 +40,10 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): void {
 
 router.use("/admin", requireAdmin);
 
+router.get("/admin/logs", (req, res) => {
+  res.json(getLogs());
+});
+
 router.get("/admin/semesters", async (_req, res) => {
   const rows = await db.select().from(semestersTable).orderBy(asc(semestersTable.orderIndex));
   res.json(rows);
@@ -46,11 +53,13 @@ router.post("/admin/semesters", async (req, res) => {
   const parsed = insertSemesterSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(semestersTable).values(parsed.data).returning();
+  addLog("SEMESTER_CREATE", `Created semester: "${row.name}" (${row.id})`);
   res.status(201).json(row);
 });
 
 router.delete("/admin/semesters/:id", async (req, res) => {
   await db.delete(semestersTable).where(eq(semestersTable.id, req.params.id));
+  addLog("SEMESTER_DELETE", `Deleted semester ID: "${req.params.id}"`);
   res.status(204).end();
 });
 
@@ -63,11 +72,13 @@ router.post("/admin/subjects", async (req, res) => {
   const parsed = insertSubjectSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(subjectsTable).values(parsed.data).returning();
+  addLog("SUBJECT_CREATE", `Created subject: "${row.name}" (${row.id})`);
   res.status(201).json(row);
 });
 
 router.delete("/admin/subjects/:id", async (req, res) => {
   await db.delete(subjectsTable).where(eq(subjectsTable.id, req.params.id));
+  addLog("SUBJECT_DELETE", `Deleted subject ID: "${req.params.id}"`);
   res.status(204).end();
 });
 
@@ -85,6 +96,7 @@ router.post("/admin/chapters", async (req, res) => {
   const parsed = insertChapterSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(chaptersTable).values(parsed.data).returning();
+  addLog("CHAPTER_CREATE", `Created chapter: "${row.title}" under Subject: "${row.subjectId}"`);
   res.status(201).json(row);
 });
 
@@ -97,11 +109,13 @@ router.put("/admin/chapters/:id", async (req, res) => {
   if (orderIndex !== undefined) updates.orderIndex = Number(orderIndex);
   if (Object.keys(updates).length === 0) { res.status(400).json({ error: "Nothing to update" }); return; }
   const [row] = await db.update(chaptersTable).set(updates).where(eq(chaptersTable.id, req.params.id)).returning();
+  addLog("CHAPTER_UPDATE", `Updated chapter: "${row.title}" (${row.id}) - Fields: [${Object.keys(updates).join(", ")}]`);
   res.json(row);
 });
 
 router.delete("/admin/chapters/:id", async (req, res) => {
   await db.delete(chaptersTable).where(eq(chaptersTable.id, req.params.id));
+  addLog("CHAPTER_DELETE", `Deleted chapter ID: "${req.params.id}"`);
   res.status(204).end();
 });
 

@@ -5,6 +5,7 @@ import multer from "multer";
 import { db, userNotesTable } from "@workspace/db";
 import { extractBearer, verifyToken } from "../lib/token";
 import { usersTable } from "@workspace/db";
+import { addLog } from "../lib/liveLogger";
 
 const require = createRequire(import.meta.url);
 const pdfModule = require("pdf-parse");
@@ -236,6 +237,8 @@ Formatting Requirements:
       prompt: promptInstructions || null,
       fileName: file.originalname,
     }).returning();
+
+    addLog("AI_CONVERT", `Student ${user.email} converted notes: "${noteTitle}" (${file.originalname})`);
 
     res.status(201).json({ id: note.id, title: note.title });
   } catch (err: any) {

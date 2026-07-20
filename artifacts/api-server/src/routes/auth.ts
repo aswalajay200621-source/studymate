@@ -6,6 +6,7 @@ import { db, usersTable } from "@workspace/db";
 import { ensureMigrated } from "@workspace/db/migrate";
 import { signToken, verifyToken, extractBearer } from "../lib/token";
 import { rateLimit } from "express-rate-limit";
+import { addLog } from "../lib/liveLogger";
 
 const router = Router();
 
@@ -159,6 +160,7 @@ router.post("/auth/email-signup", authLimiter, async (req, res) => {
     }
 
     const token = signToken({ userId: user.id, role: user.role, tv: user.tokenVersion });
+    addLog("SIGNUP", `New user registered: ${user.email} (${user.college}, Year ${user.year})`);
     res.status(201).json({
       token,
       requiresVerification: !isDev,
@@ -194,6 +196,7 @@ router.post("/auth/email-login", authLimiter, async (req, res) => {
       return;
     }
     const token = signToken({ userId: user.id, role: user.role, tv: user.tokenVersion });
+    addLog("LOGIN", `User logged in: ${user.email} (${user.role})`);
     res.json({ token, user: userResponse(user) });
   } catch (err: any) {
     console.error("[auth/email-login]", err?.message);
@@ -218,6 +221,8 @@ router.get("/auth/verify", async (req, res) => {
     await db.update(usersTable)
       .set({ isVerified: true, verificationToken: null })
       .where(eq(usersTable.id, user.id));
+
+    addLog("VERIFY", `User verified email: ${user.email}`);
 
     const newToken = signToken({ userId: user.id, role: user.role, tv: user.tokenVersion });
     res.json({ token: newToken, message: "Email verified successfully! You can now log in." });
@@ -284,6 +289,8 @@ router.post("/auth/reset-password", authLimiter, async (req, res) => {
         tokenVersion: (user.tokenVersion ?? 1) + 1,
       })
       .where(eq(usersTable.id, user.id));
+
+    addLog("RESET_PW", `User reset password: ${user.email}`);
 
     res.json({ message: "Password reset successfully. Please log in with your new password." });
   } catch (err: any) {
