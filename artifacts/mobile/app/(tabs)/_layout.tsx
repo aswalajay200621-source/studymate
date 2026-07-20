@@ -21,8 +21,8 @@ const isWeb = Platform.OS === "web";
 
 const NAV_ITEMS = [
   { name: "index",    route: "/(tabs)",          label: "Home",     icon: "home"      as const },
-  { name: "library",  route: "/(tabs)/library",   label: "Library",  icon: "book-open" as const },
-  { name: "make-own", route: "/(tabs)/make-own",  label: "Make Own", icon: "zap"       as const },
+  { name: "courses",  route: "/(tabs)/courses",  label: "Courses",  icon: "book-open" as const },
+  { name: "planner",  route: "/(tabs)/planner",  label: "Planner",  icon: "calendar"  as const },
   { name: "profile",  route: "/(tabs)/profile",   label: "Profile",  icon: "user"      as const },
 ];
 
@@ -42,13 +42,13 @@ function NativeTabLayout() {
         <Icon sf={{ default: "house", selected: "house.fill" }} />
         <Label>Home</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="library">
+      <NativeTabs.Trigger name="courses">
         <Icon sf={{ default: "books.vertical", selected: "books.vertical.fill" }} />
-        <Label>Library</Label>
+        <Label>Courses</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="make-own">
-        <Icon sf={{ default: "wand.and.stars", selected: "wand.and.stars.fill" }} />
-        <Label>Make Own</Label>
+      <NativeTabs.Trigger name="planner">
+        <Icon sf={{ default: "calendar", selected: "calendar.fill" }} />
+        <Label>Planner</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
@@ -238,9 +238,9 @@ function ClassicTabLayout() {
             }}
           />
           <Tabs.Screen
-            name="library"
+            name="courses"
             options={{
-              title: "Library",
+              title: "Courses",
               tabBarIcon: ({ color }) =>
                 isIOS
                   ? <SymbolView name="books.vertical" tintColor={color} size={24} />
@@ -248,13 +248,13 @@ function ClassicTabLayout() {
             }}
           />
           <Tabs.Screen
-            name="make-own"
+            name="planner"
             options={{
-              title: "Make Own",
+              title: "Planner",
               tabBarIcon: ({ color }) =>
                 isIOS
-                  ? <SymbolView name="wand.and.stars" tintColor={color} size={24} />
-                  : <Feather name="zap" size={22} color={color} />,
+                  ? <SymbolView name="calendar" tintColor={color} size={24} />
+                  : <Feather name="calendar" size={22} color={color} />,
             }}
           />
           <Tabs.Screen
