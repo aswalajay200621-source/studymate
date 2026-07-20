@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -112,6 +113,41 @@ export default function PlannerScreen() {
   };
   const addEntry = () => {
     setEditDraft((d) => [...d, { time: "", title: "", desc: "", color: C.primary }]);
+  };
+
+  // ── Add New Task modal ──
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTaskDay,   setNewTaskDay]   = useState(now.getDate());
+  const [newTaskMonth, setNewTaskMonth] = useState(now.getMonth());
+  const [newTaskYear,  setNewTaskYear]  = useState(now.getFullYear());
+  const [newTaskText,  setNewTaskText]  = useState("");
+
+  const modalDaysInMonth = getDaysInMonth(newTaskYear, newTaskMonth);
+
+  const prevModalMonth = () => {
+    if (newTaskMonth === 0) { setNewTaskMonth(11); setNewTaskYear((y) => y - 1); }
+    else setNewTaskMonth((m) => m - 1);
+    setNewTaskDay(1);
+  };
+  const nextModalMonth = () => {
+    if (newTaskMonth === 11) { setNewTaskMonth(0); setNewTaskYear((y) => y + 1); }
+    else setNewTaskMonth((m) => m + 1);
+    setNewTaskDay(1);
+  };
+
+  const saveNewTask = () => {
+    const text = newTaskText.trim();
+    if (!text) return;
+    const dateLabel = `${MONTHS[newTaskMonth].slice(0, 3)} ${newTaskDay}: `;
+    setTasks((t) => [...t, { id: String(Date.now()), text: dateLabel + text, done: false }]);
+    // Also mark on calendar grid
+    const key = `${newTaskYear}-${newTaskMonth}-${newTaskDay}`;
+    setDayTasks((dt) => ({ ...dt, [key]: text }));
+    // Sync calendar view to that month so the dot is visible
+    setMonth(newTaskMonth);
+    setYear(newTaskYear);
+    setNewTaskText("");
+    setShowAddModal(false);
   };
 
   const daysInMonth = getDaysInMonth(year, month);
@@ -390,7 +426,7 @@ export default function PlannerScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <TouchableOpacity style={s.addTaskBtn}>
+              <TouchableOpacity style={s.addTaskBtn} onPress={() => setShowAddModal(true)}>
                 <Feather name="plus" size={16} color={C.primary} />
                 <Text style={{ fontSize: 13, color: C.primary, fontWeight: "600" }}>Add New Task</Text>
               </TouchableOpacity>
@@ -413,6 +449,92 @@ export default function PlannerScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── Add New Task Modal ── */}
+      <Modal
+        visible={showAddModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View style={s.modalBackdrop}>
+          <View style={s.modalCard}>
+            {/* Header */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <Text style={s.modalTitle}>Add New Task</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={s.modalCloseBtn}>
+                <Feather name="x" size={16} color={C.muted} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Date Picker */}
+            <Text style={s.modalLabel}>SELECT DATE</Text>
+            {/* Month nav */}
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <TouchableOpacity style={s.calNavBtn} onPress={prevModalMonth}>
+                <Feather name="chevron-left" size={16} color={C.text} />
+              </TouchableOpacity>
+              <Text style={{ color: C.text, fontWeight: "600", fontSize: 14 }}>
+                {MONTHS[newTaskMonth]} {newTaskYear}
+              </Text>
+              <TouchableOpacity style={s.calNavBtn} onPress={nextModalMonth}>
+                <Feather name="chevron-right" size={16} color={C.text} />
+              </TouchableOpacity>
+            </View>
+            {/* Day grid */}
+            <View style={s.modalDayGrid}>
+              {DAYS.map((d) => (
+                <Text key={d} style={s.modalDayHeader}>{d}</Text>
+              ))}
+              {Array.from({ length: getFirstDayOffset(newTaskYear, newTaskMonth) }).map((_, i) => (
+                <View key={`e${i}`} style={s.modalDayCell} />
+              ))}
+              {Array.from({ length: modalDaysInMonth }).map((_, i) => {
+                const d = i + 1;
+                const sel = d === newTaskDay;
+                return (
+                  <TouchableOpacity
+                    key={d}
+                    style={[s.modalDayCell, sel && s.modalDayCellSel]}
+                    onPress={() => setNewTaskDay(d)}
+                  >
+                    <Text style={[s.modalDayNum, sel && { color: C.bg, fontWeight: "700" }]}>{d}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Task text */}
+            <Text style={[s.modalLabel, { marginTop: 16 }]}>TASK</Text>
+            <TextInput
+              style={s.modalInput}
+              value={newTaskText}
+              onChangeText={setNewTaskText}
+              placeholder="What do you need to do?"
+              placeholderTextColor="rgba(189,194,255,0.3)"
+              returnKeyType="done"
+              onSubmitEditing={saveNewTask}
+              autoFocus
+            />
+
+            {/* Actions */}
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+              <TouchableOpacity
+                style={[s.modalBtn, { backgroundColor: "rgba(255,255,255,0.05)", flex: 1 }]}
+                onPress={() => setShowAddModal(false)}
+              >
+                <Text style={{ color: C.muted, fontWeight: "600", fontSize: 14 }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.modalBtn, { backgroundColor: C.primary, flex: 2 }]}
+                onPress={saveNewTask}
+              >
+                <Text style={{ color: C.bg, fontWeight: "700", fontSize: 14 }}>Save Task</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -565,6 +687,55 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
     marginTop: 18, paddingVertical: 10,
     borderRadius: 10, borderWidth: 1, borderColor: "rgba(189,194,255,0.2)",
+  },
+
+  // Add Task Modal
+  modalBackdrop: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 20,
+    ...(isWeb ? { backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" } as any : {}),
+  },
+  modalCard: {
+    width: "100%" as any, maxWidth: 420,
+    backgroundColor: "#131b2e",
+    borderRadius: 20, padding: 24,
+    borderWidth: 1, borderColor: "rgba(189,194,255,0.15)",
+    ...(isWeb ? { boxShadow: "0 24px 64px rgba(0,0,0,0.5)" } as any : {}),
+  },
+  modalTitle: {
+    fontSize: 20, fontWeight: "700", color: C.text,
+    fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+  },
+  modalCloseBtn: {
+    width: 32, height: 32, borderRadius: 8,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  modalLabel: { fontSize: 10, fontWeight: "700", color: C.muted, letterSpacing: 1.2, marginBottom: 8 },
+  modalDayGrid: { flexDirection: "row", flexWrap: "wrap" },
+  modalDayHeader: {
+    width: "14.28%" as any, textAlign: "center",
+    fontSize: 9, color: C.muted, fontWeight: "700", letterSpacing: 0.5,
+    paddingVertical: 4,
+  },
+  modalDayCell: {
+    width: "14.28%" as any, aspectRatio: 1,
+    alignItems: "center", justifyContent: "center",
+    borderRadius: 6,
+  },
+  modalDayCellSel: { backgroundColor: C.primary },
+  modalDayNum: { fontSize: 12, color: C.text, fontWeight: "500" },
+  modalInput: {
+    fontSize: 14, color: C.text,
+    borderWidth: 1, borderColor: "rgba(189,194,255,0.25)",
+    borderRadius: 10, padding: 12,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    ...(isWeb ? { outlineStyle: "none" } as any : {}),
+  },
+  modalBtn: {
+    paddingVertical: 12, borderRadius: 10,
+    alignItems: "center", justifyContent: "center",
   },
 
   // Playlist
