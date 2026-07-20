@@ -177,65 +177,32 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* ── Main row: Task Ledger + Disciplines ── */}
-        <View style={[isDesktop ? s.row : s.col, { gap: 16 }]}>
-
-          {/* Task Ledger (2/3 width) */}
-          <View style={[...glassCard(s.ledgerCard), isDesktop ? s.ledgerCardDesktop : {}]}>
-            <View style={s.ledgerHeader}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Feather name="list" size={18} color={C.primary} />
-                <Text style={s.sectionTitle}>Task Ledger</Text>
-              </View>
-              <TouchableOpacity>
-                <Text style={{ fontSize: 13, color: C.primary, fontWeight: "500" }}>Manage All</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Table header */}
-            <View style={[s.tableHead, { backgroundColor: "rgba(255,255,255,0.04)" }]}>
-              <Text style={[s.tableHeadCell, { flex: 2 }]}>TASK DETAIL</Text>
-              <Text style={[s.tableHeadCell, { flex: 1 }]}>STATUS</Text>
-              <Text style={[s.tableHeadCell, { flex: 1 }]}>DUE DATE</Text>
-            </View>
-
-            {/* Rows */}
-            {TASKS.map((task, idx) => (
-              <View key={idx} style={[s.tableRow, idx < TASKS.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
-                <View style={{ flex: 2 }}>
-                  <Text style={{ fontSize: 13, fontWeight: "600", color: C.text }}>{task.title}</Text>
-                  <Text style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{task.sub}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={[s.statusBadge, { backgroundColor: STATUS_STYLE[task.status].bg }]}>
-                    <Text style={[s.statusText, { color: STATUS_STYLE[task.status].text }]}>{task.status.toUpperCase()}</Text>
-                  </View>
-                </View>
-                <Text style={[s.dueText, { flex: 1 }]}>{task.due}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Active Disciplines (1/3 width) */}
-          <View style={[isDesktop ? s.discColDesktop : {}, { gap: 14 }]}>
-            <Text style={s.sectionTitle}>Active Disciplines</Text>
-            {subjects.slice(0, 3).map((sub, idx) => (
+        {/* ── Main row: Active Disciplines ── */}
+        <View style={{ gap: 14 }}>
+          <Text style={s.sectionTitle}>Active Disciplines</Text>
+          <View style={isDesktop ? { flexDirection: "row", flexWrap: "wrap", gap: 16 } : { flexDirection: "column", gap: 14 }}>
+            {subjects.slice(0, 4).map((sub, idx) => (
               <TouchableOpacity
                 key={sub.id}
                 onPress={() => router.push({ pathname: "/subject/[id]", params: { id: sub.id } })}
                 activeOpacity={0.85}
+                style={isDesktop ? { width: "31%" as any } : {}}
               >
                 <DisciplineCard
                   name={sub.name}
-                  pct={[72, 48, 31][idx % 3]}
-                  color={[C.primary, C.secondary, C.tertiary][idx % 3]}
+                  pct={[72, 48, 31, 85][idx % 4]}
+                  color={[C.primary, C.secondary, C.tertiary, C.primary][idx % 4]}
                 />
               </TouchableOpacity>
             ))}
             {subjects.length === 0 && (
               <>
-                <DisciplineCard name="Neural Networks"    pct={72} color={C.primary}   />
-                <DisciplineCard name="Circuit Dynamics"   pct={48} color={C.secondary} />
+                <View style={isDesktop ? { width: "48%" as any } : {}}>
+                  <DisciplineCard name="Neural Networks"    pct={72} color={C.primary}   />
+                </View>
+                <View style={isDesktop ? { width: "48%" as any } : {}}>
+                  <DisciplineCard name="Circuit Dynamics"   pct={48} color={C.secondary} />
+                </View>
               </>
             )}
           </View>
