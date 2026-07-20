@@ -4,6 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -86,6 +87,9 @@ export default function PlannerScreen() {
   const [year, setYear]   = useState(now.getFullYear());
   const [selectedDay, setSelectedDay] = useState(now.getDate());
   const [tasks, setTasks] = useState(INITIAL_TASKS);
+  // Per-date task drafts: key = "YYYY-M-D"
+  const [dayTasks, setDayTasks] = useState<Record<string, string>>({});
+  const [inputDraft, setInputDraft] = useState("");
 
   const daysInMonth = getDaysInMonth(year, month);
   const offset      = getFirstDayOffset(year, month);
@@ -94,6 +98,20 @@ export default function PlannerScreen() {
 
   const toggleTask = (id: string) =>
     setTasks((t) => t.map((tk) => (tk.id === id ? { ...tk, done: !tk.done } : tk)));
+
+  const dayKey = (d: number) => `${year}-${month}-${d}`;
+
+  const commitDayTask = (day: number) => {
+    const raw = inputDraft.trim();
+    if (!raw) return;
+    const dateLabel = `${MONTHS[month].slice(0, 3)} ${day}: `;
+    setTasks((t) => [
+      ...t,
+      { id: String(Date.now()), text: dateLabel + raw, done: false },
+    ]);
+    setDayTasks((dt) => ({ ...dt, [dayKey(day)]: raw }));
+    setInputDraft("");
+  };
 
   const prevMonth = () => {
     if (month === 0) { setMonth(11); setYear((y) => y - 1); }
@@ -168,23 +186,48 @@ export default function PlannerScreen() {
 
                 {/* Day cells */}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1;
+                  const day  = i + 1;
                   const isToday = isThisMonth && day === today;
                   const isSel   = day === selectedDay;
-                  const hasDot  = day % 4 === 0;
+                  const savedTask = dayTasks[dayKey(day)];
                   return (
                     <TouchableOpacity
                       key={day}
                       style={[
                         s.calCell,
-                        isToday && { backgroundColor: "rgba(189,194,255,0.12)", borderWidth: 1, borderColor: "rgba(189,194,255,0.3)" },
-                        isSel && !isToday && { backgroundColor: "rgba(189,194,255,0.06)" },
+                        isToday && { backgroundColor: "rgba(189,194,255,0.10)" },
+                        isSel && { backgroundColor: "rgba(189,194,255,0.15)", borderColor: C.primary },
                       ]}
-                      onPress={() => setSelectedDay(day)}
-                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedDay(day);
+                        setInputDraft(dayTasks[dayKey(day)] ?? "");
+                      }}
+                      activeOpacity={0.75}
                     >
-                      <Text style={[s.calDayNum, isToday && { color: C.primary, fontWeight: "700" }]}>{day}</Text>
-                      {hasDot && <View style={[s.calDot, { backgroundColor: day % 8 === 0 ? C.tertiary : C.primary }]} />}
+                      {/* Date number */}
+                      <Text style={[
+                        s.calDayNum,
+                        isToday && { color: C.primary, fontWeight: "700" },
+                        isSel  && { color: C.primary },
+                      ]}>{day}</Text>
+
+                      {/* Inline input when selected */}
+                      {isSel ? (
+                        <TextInput
+                          style={s.calCellInput}
+                          value={inputDraft}
+                          onChangeText={setInputDraft}
+                          onSubmitEditing={() => commitDayTask(day)}
+                          placeholder="Add task…"
+                          placeholderTextColor="rgba(189,194,255,0.35)"
+                          returnKeyType="done"
+                          blurOnSubmit
+                          autoFocus
+                          multiline={false}
+                        />
+                      ) : savedTask ? (
+                        <Text style={s.calCellTaskPreview} numberOfLines={1}>{savedTask}</Text>
+                      ) : null}
                     </TouchableOpacity>
                   );
                 })}
@@ -335,16 +378,42 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.05)",
   },
   calMonthLabel: { fontSize: 15, fontWeight: "600", color: C.text },
-  calGrid:       { flexDirection: "row", flexWrap: "wrap" },
-  calDayHeader:  { width: "14.28%" as any, paddingVertical: 8, alignItems: "center" },
+  calGrid:       {
+    flexDirection: "row", flexWrap: "wrap",
+    borderTopWidth: 1, borderLeftWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  calDayHeader:  {
+    width: "14.28%" as any, paddingVertical: 8, alignItems: "center",
+    borderRightWidth: 1, borderBottomWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
   calDayHeaderText: { fontSize: 10, fontWeight: "700", color: C.muted, letterSpacing: 1 },
   calCell:       {
-    width: "14.28%" as any, aspectRatio: 1,
-    padding: 4, alignItems: "flex-start",
-    borderRadius: 6,
+    width: "14.28%" as any,
+    minHeight: 72,
+    padding: 5,
+    alignItems: "flex-start",
+    borderRightWidth: 1, borderBottomWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    borderTopWidth: 0, borderLeftWidth: 0,
   },
-  calDayNum:     { fontSize: 12, color: C.muted, fontWeight: "500" },
+  calDayNum:     { fontSize: 12, color: C.muted, fontWeight: "500", marginBottom: 2 },
   calDot:        { width: 6, height: 6, borderRadius: 3, marginTop: 3 },
+  calCellInput:  {
+    fontSize: 10, color: C.primary, fontWeight: "500",
+    width: "100%" as any,
+    paddingVertical: 2, paddingHorizontal: 0,
+    borderBottomWidth: 1, borderBottomColor: "rgba(189,194,255,0.4)",
+    backgroundColor: "transparent",
+    marginTop: 2,
+    ...(isWeb ? { outlineStyle: "none" } as any : {}),
+  },
+  calCellTaskPreview: {
+    fontSize: 9, color: C.primary, fontWeight: "500",
+    opacity: 0.8, marginTop: 2,
+    width: "100%" as any,
+  },
 
   // Timeline
   timelineCard:  { padding: 24 },
