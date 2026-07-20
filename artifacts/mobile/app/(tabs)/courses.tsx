@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -80,6 +80,15 @@ function ProgressBar({ pct, color }: { pct: number; color: string }) {
 }
 
 // ─── Main screen ───────────────────────────────────────────────────────────────
+interface LastReadState {
+  chapterId: string;
+  chapterTitle: string;
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  timestamp: number;
+}
+
 export default function CoursesScreen() {
   const insets = useSafeAreaInsets();
   const { selectedCollege } = useApp();
@@ -88,6 +97,25 @@ export default function CoursesScreen() {
 
   const { subjects, loading } = useApiSubjects(selectedCollege ?? "");
   const [query, setQuery] = useState("");
+  const [lastRead, setLastRead] = useState<LastReadState | null>(null);
+
+  useEffect(() => {
+    const fetchLastRead = async () => {
+      if (Platform.OS === "web") {
+        try {
+          const val = localStorage.getItem("study_mate_last_read");
+          if (val) setLastRead(JSON.parse(val));
+        } catch {}
+      } else {
+        try {
+          const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+          const val = await AsyncStorage.getItem("study_mate_last_read");
+          if (val) setLastRead(JSON.parse(val));
+        } catch {}
+      }
+    };
+    fetchLastRead();
+  }, []);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return subjects;
@@ -142,6 +170,29 @@ export default function CoursesScreen() {
             style={[s.searchInput, { color: C.text }]}
           />
         </View>
+
+        {/* ── Last Read Widget ── */}
+        {lastRead && (
+          <TouchableOpacity
+            style={[...glassStyle(s.lastReadCard)]}
+            onPress={() => router.push({ pathname: "/chapter/[id]", params: { id: lastRead.chapterId, subjectId: lastRead.subjectId } })}
+            activeOpacity={0.85}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+              <View style={[s.lastReadIconContainer, { backgroundColor: `${C.primary}18` }]}>
+                <Feather name="clock" size={20} color={C.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.lastReadLabel}>LAST READ CHAPTER</Text>
+                <Text style={s.lastReadChapterTitle} numberOfLines={1}>{lastRead.chapterTitle}</Text>
+                <Text style={s.lastReadSubjectSub} numberOfLines={1}>
+                  {lastRead.subjectCode} · {lastRead.subjectName}
+                </Text>
+              </View>
+              <Feather name="arrow-right" size={16} color={C.primary} />
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* ── Loading ── */}
         {loading && (
@@ -392,4 +443,32 @@ const s = StyleSheet.create({
   statCard:      { flex: 1, padding: 20, borderRadius: 16, borderWidth: 1 },
   statLabel:     { fontSize: 11, fontWeight: "700", color: C.muted, letterSpacing: 1.5, marginBottom: 4 },
   statValue:     { fontSize: 22, fontWeight: "700", color: C.text },
+  lastReadCard: {
+    padding: 16,
+    marginBottom: 24,
+  },
+  lastReadIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  lastReadLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: C.primary,
+    letterSpacing: 1.5,
+    marginBottom: 4,
+  },
+  lastReadChapterTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: C.text,
+  },
+  lastReadSubjectSub: {
+    fontSize: 12,
+    color: C.muted,
+    marginTop: 2,
+  },
 });

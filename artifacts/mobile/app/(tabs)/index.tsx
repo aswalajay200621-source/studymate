@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Platform,
   ScrollView,
@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import { useApp } from "@/context/AppContext";
 import { useApiSubjects } from "@/hooks/useApiSubjects";
 import { useIsDesktop } from "@/hooks/useIsDesktop";
+import { apiFetch } from "@/utils/api";
 
 const isWeb = Platform.OS === "web";
 
@@ -50,40 +51,16 @@ function glassCard(...extras: object[]) {
   ];
 }
 
-// ── Task ledger row ───────────────────────────────────────────────────────────
-const TASKS = [
-  { title: "Assignment Review",      sub: "Core Subjects",  status: "Urgent",      due: "Today, 23:59"  },
-  { title: "Chapter Summary Draft",  sub: "Study Notes",    status: "In-Progress", due: "Tomorrow"      },
-  { title: "Practice Problem Set",   sub: "Exam Prep",      status: "Not-Started", due: "This week"     },
-];
 
-const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  "Urgent":      { bg: "#93000a",             text: "#ffdad6" },
-  "In-Progress": { bg: "rgba(189,194,255,0.15)", text: "#bdc2ff" },
-  "Not-Started": { bg: "rgba(255,255,255,0.06)", text: "#c6c5d5" },
-};
 
-// ── Active discipline card ────────────────────────────────────────────────────
-function DisciplineCard({ name, pct, color }: { name: string; pct: number; color: string }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <View
-      style={[...glassCard(s.discCard), hov && { borderColor: `${color}55` } as any]}
-      {...(isWeb ? {
-        onMouseEnter: () => setHov(true),
-        onMouseLeave: () => setHov(false),
-      } as any : {})}
-    >
-      <Text style={s.discName}>{name}</Text>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 12, marginBottom: 6 }}>
-        <Text style={s.masteryLabel}>MASTERY</Text>
-        <Text style={[s.masteryPct, { color }]}>{pct}%</Text>
-      </View>
-      <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: `${pct}%` as any, backgroundColor: color }]} />
-      </View>
-    </View>
-  );
+interface ApiChapter {
+  id: string;
+  title: string;
+  createdAt: string;
+  subjectId: string;
+  subjectName: string;
+  semester: number;
+  college: string;
 }
 
 // ── Dashboard screen ──────────────────────────────────────────────────────────
@@ -94,9 +71,64 @@ export default function DashboardScreen() {
   const topPad = isWeb ? 72 : insets.top + 16;
 
   const { subjects } = useApiSubjects(selectedCollege ?? "");
+  const [chapters, setChapters] = useState<ApiChapter[]>([]);
+  const [chaptersLoading, setChaptersLoading] = useState(true);
 
   // Bar chart heights for Study Velocity
   const bars = [30, 45, 60, 50, 80, 100, 90];
+
+  useEffect(() => {
+    if (!selectedCollege) return;
+    let cancelled = false;
+    setChaptersLoading(true);
+    apiFetch<ApiChapter[]>(`/chapters?college=${encodeURIComponent(selectedCollege)}`)
+      .then((data) => {
+        if (!cancelled) setChapters(data ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setChaptersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedCollege]);
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  };
+
+  const groupedSemesters = useMemo(() => {
+    const semMap: Record<number, Record<string, ApiChapter[]>> = {};
+
+    chapters.forEach((ch) => {
+      const sem = ch.semester || 1;
+      if (!semMap[sem]) {
+        semMap[sem] = {};
+      }
+      const dateKey = formatDate(ch.createdAt);
+      if (!semMap[sem][dateKey]) {
+        semMap[sem][dateKey] = [];
+      }
+      semMap[sem][dateKey].push(ch);
+    });
+
+    return Object.keys(semMap)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((semNum) => {
+        const dateGroups = semMap[semNum];
+        const sortedDates = Object.keys(dateGroups)
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+          .map((dateStr) => ({
+            date: dateStr,
+            items: dateGroups[dateStr],
+          }));
+        return {
+          semester: semNum,
+          dates: sortedDates,
+        };
+      });
+  }, [chapters]);
 
   return (
     <View style={[s.root, { backgroundColor: C.bg }]}>
@@ -177,35 +209,62 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* ── Main row: Active Disciplines ── */}
-        <View style={{ gap: 14 }}>
-          <Text style={s.sectionTitle}>Active Disciplines</Text>
-          <View style={isDesktop ? { flexDirection: "row", flexWrap: "wrap", gap: 16 } : { flexDirection: "column", gap: 14 }}>
-            {subjects.slice(0, 4).map((sub, idx) => (
-              <TouchableOpacity
-                key={sub.id}
-                onPress={() => router.push({ pathname: "/subject/[id]", params: { id: sub.id } })}
-                activeOpacity={0.85}
-                style={isDesktop ? { width: "31%" as any } : {}}
-              >
-                <DisciplineCard
-                  name={sub.name}
-                  pct={[72, 48, 31, 85][idx % 4]}
-                  color={[C.primary, C.secondary, C.tertiary, C.primary][idx % 4]}
-                />
-              </TouchableOpacity>
-            ))}
-            {subjects.length === 0 && (
-              <>
-                <View style={isDesktop ? { width: "48%" as any } : {}}>
-                  <DisciplineCard name="Neural Networks"    pct={72} color={C.primary}   />
-                </View>
-                <View style={isDesktop ? { width: "48%" as any } : {}}>
-                  <DisciplineCard name="Circuit Dynamics"   pct={48} color={C.secondary} />
-                </View>
-              </>
-            )}
+        {/* ── Uploaded HTML Files directory ── */}
+        <View style={{ gap: 20, marginTop: 10 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Feather name="folder" size={20} color={C.primary} />
+            <Text style={s.sectionTitle}>Uploaded Study Chapters</Text>
           </View>
+
+          {chaptersLoading ? (
+            <Text style={{ color: C.muted, fontStyle: "italic" }}>Loading chapters...</Text>
+          ) : chapters.length === 0 ? (
+            <Text style={{ color: C.muted, fontStyle: "italic" }}>No chapters uploaded yet.</Text>
+          ) : (
+            groupedSemesters.map((sem) => (
+              <View key={sem.semester} style={s.semesterGroup}>
+                <View style={s.semesterHeader}>
+                  <Text style={s.semesterHeaderText}>SEMESTER {sem.semester}</Text>
+                  <View style={s.semesterHeaderLine} />
+                </View>
+
+                <View style={{ gap: 16, marginTop: 12 }}>
+                  {sem.dates.map((group) => (
+                    <View key={group.date} style={s.dateGroup}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                        <Feather name="calendar" size={13} color={C.secondary} />
+                        <Text style={s.dateGroupTitle}>{group.date}</Text>
+                      </View>
+                      
+                      <View style={isDesktop ? s.chaptersGrid : s.chaptersStack}>
+                        {group.items.map((ch) => (
+                          <TouchableOpacity
+                            key={ch.id}
+                            style={[...glassCard(s.chapterRowItem), isDesktop && { width: "31%" as any }]}
+                            onPress={() => router.push({ pathname: "/chapter/[id]", params: { id: ch.id } })}
+                            activeOpacity={0.8}
+                          >
+                            <View style={s.chapterItemLeft}>
+                              <Feather name="file-text" size={18} color={C.primary} style={{ marginRight: 10 }} />
+                              <View style={{ flex: 1 }}>
+                                <Text style={s.chapterTitleText} numberOfLines={1}>
+                                  {ch.title}
+                                </Text>
+                                <Text style={s.chapterSubjectText} numberOfLines={1}>
+                                  {ch.subjectName}
+                                </Text>
+                              </View>
+                            </View>
+                            <Feather name="chevron-right" size={14} color={C.muted} />
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={{ height: 40 }} />
@@ -287,15 +346,64 @@ const s = StyleSheet.create({
     fontFamily: isWeb ? "'Playfair Display', serif" : "System",
   },
 
-  // Disciplines
-  discColDesktop: { flex: 1 },
-  discCard:       { padding: 18, marginBottom: 2 },
-  discName:       {
-    fontSize: 15, fontWeight: "700", color: C.text,
-    fontFamily: isWeb ? "'Playfair Display', serif" : "System",
+  // Chapters list styles
+  semesterGroup: {
+    marginBottom: 16,
   },
-  masteryLabel:   { fontSize: 10, fontWeight: "700", color: C.muted, letterSpacing: 1.5 },
-  masteryPct:     { fontSize: 13, fontWeight: "700" },
-  progressTrack:  { height: 6, backgroundColor: C.surfaceHigh2, borderRadius: 99, overflow: "hidden" },
-  progressFill:   { height: "100%" as any, borderRadius: 99 },
+  semesterHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 8,
+  },
+  semesterHeaderText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: C.primary,
+    letterSpacing: 1.5,
+  },
+  semesterHeaderLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: C.border,
+  },
+  dateGroup: {
+    paddingLeft: 4,
+  },
+  dateGroupTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: C.secondary,
+    letterSpacing: 0.5,
+  },
+  chaptersGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  chaptersStack: {
+    flexDirection: "column",
+    gap: 10,
+  },
+  chapterRowItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 14,
+  },
+  chapterItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  chapterTitleText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: C.text,
+  },
+  chapterSubjectText: {
+    fontSize: 11,
+    color: C.muted,
+    marginTop: 2,
+  },
 });

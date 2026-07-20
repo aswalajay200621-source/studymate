@@ -57,6 +57,29 @@ export default function ChapterScreen() {
   const { subject } = useApiSubject(subjectId);
   const { chapter, loading } = useApiChapter(subjectId, id);
 
+  React.useEffect(() => {
+    if (chapter && subject) {
+      const data = {
+        chapterId: chapter.id,
+        chapterTitle: chapter.title,
+        subjectId: subject.id,
+        subjectName: subject.name,
+        subjectCode: subject.code,
+        timestamp: Date.now(),
+      };
+      if (Platform.OS === "web") {
+        try {
+          localStorage.setItem("study_mate_last_read", JSON.stringify(data));
+        } catch {}
+      } else {
+        try {
+          const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+          AsyncStorage.setItem("study_mate_last_read", JSON.stringify(data));
+        } catch {}
+      }
+    }
+  }, [chapter, subject]);
+
   const subjectColor = subject?.color ?? colors.accent;
   const subjectName  = subject?.name ?? "";
 
