@@ -122,7 +122,7 @@ export default function SubjectScreen() {
 
           <View style={s.metaRow}>
             {[
-              { icon: "book", label: `${subject.chapters.length} Chapters` },
+              { icon: "book", label: `${subject.chapters.length} Modules` },
               { icon: "credit-card", label: "Flashcards" },
               { icon: "check-square", label: "Quizzes" },
             ].map((m) => (
@@ -154,7 +154,7 @@ export default function SubjectScreen() {
             fontWeight: "700" as any,
           }
         ]}>
-          Chapters Directory
+          Modules Directory
         </Text>
         {subject.chapters.map((chapter, i) => (
           <ChapterCard
