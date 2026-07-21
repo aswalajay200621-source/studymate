@@ -296,11 +296,11 @@ export default function CoursesScreen() {
             {/* Add course card */}
             <TouchableOpacity style={[s.addCard, isDesktop ? s.addCardDesktop : {}]} activeOpacity={0.8}>
               <View style={s.addCardCircle}>
-                <Feather name="plus" size={32} color={C.muted} />
+                <Feather name="plus" size={26} color={C.muted} />
               </View>
-              <View style={{ marginLeft: isDesktop ? 24 : 0, marginTop: isDesktop ? 0 : 12 }}>
+              <View style={s.addCardTextWrap}>
                 <Text style={s.addCardTitle}>Enroll in New Course</Text>
-                <Text style={s.addCardSub}>Explore the catalog and add more subjects to your curriculum.</Text>
+                <Text style={s.addCardSub} numberOfLines={2}>Explore the catalog and add more subjects to your curriculum.</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -341,7 +341,7 @@ const s = StyleSheet.create({
     fontFamily: isWeb ? "'Playfair Display', serif" : "System",
     lineHeight: 44,
   },
-  pageSub:       { fontSize: 15, color: C.muted, marginTop: 6, lineHeight: 22, flex: 1 },
+  pageSub:       { fontSize: 15, color: C.muted, marginTop: 6, lineHeight: 22, minWidth: 260, flex: 1 },
 
   // Filter buttons
   filterBtn:     {
@@ -365,8 +365,8 @@ const s = StyleSheet.create({
   bentoStack:    { flexDirection: "column", gap: 16, marginBottom: 32 },
 
   // Hero card
-  heroCard:      { padding: 28, overflow: "hidden", position: "relative" },
-  heroCardDesktop: { width: "65%" as any },
+  heroCard:      { padding: 28, overflow: "hidden", position: "relative", width: "100%" as any },
+  heroCardDesktop: { width: isWeb ? ("calc(66.66% - 6px)" as any) : ("65%" as any) },
   heroWatermark: {
     position: "absolute", top: 16, right: 16,
     opacity: 0.15, transform: [{ rotate: "-10deg" }],
@@ -393,8 +393,8 @@ const s = StyleSheet.create({
   courseBadgeText: { fontSize: 11, fontWeight: "700", color: C.primary, letterSpacing: 1 },
 
   // Small cards
-  smallCard:     { padding: 24, flex: 1, minWidth: 220 },
-  smallCardDesktop: { width: "31%" as any, flex: 0 },
+  smallCard:     { padding: 24, width: "100%" as any },
+  smallCardDesktop: { width: isWeb ? ("calc(33.33% - 11px)" as any) : ("31%" as any) },
   smallCardIcon: { width: 52, height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 16 },
   smallCardBadgeRow: { flexDirection: "row", marginBottom: 10 },
   smallCardTitle: {
@@ -412,21 +412,22 @@ const s = StyleSheet.create({
 
   // Add course
   addCard:       {
-    borderWidth: 2, borderStyle: "dashed" as any, borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 20, padding: 28,
+    borderWidth: 2, borderStyle: "dashed" as any, borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: 20, padding: 24,
     alignItems: "center", justifyContent: "center",
     flexDirection: "row",
     minHeight: 160,
     width: "100%" as any,
   },
-  addCardDesktop: { width: "65%" as any, flex: 0 },
+  addCardDesktop: { width: isWeb ? ("calc(33.33% - 11px)" as any) : ("31%" as any) },
   addCardCircle: {
-    width: 72, height: 72, borderRadius: 36,
+    width: 56, height: 56, borderRadius: 28,
     backgroundColor: "rgba(255,255,255,0.04)",
     alignItems: "center", justifyContent: "center",
   },
-  addCardTitle:  { fontSize: 18, fontWeight: "700", color: C.text, marginBottom: 6 },
-  addCardSub:    { fontSize: 13, color: C.muted, maxWidth: 280, lineHeight: 20 },
+  addCardTitle:  { fontSize: 16, fontWeight: "700", color: C.text, marginBottom: 4 },
+  addCardSub:    { fontSize: 12, color: C.muted, lineHeight: 18 },
+  addCardTextWrap: { marginLeft: 16, flex: 1 },
 
   // Progress
   progressTrack: { height: 8, backgroundColor: C.surfaceHigh2, borderRadius: 99, overflow: "hidden" },
